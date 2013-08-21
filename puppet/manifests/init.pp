@@ -37,5 +37,6 @@ Service {
 service {
     'nginx': ;
     'uwsgi': 
-        require => File['/etc/uwsgi/apps-enabled/kickoff.yaml'];
+        require => [File['/etc/uwsgi/apps-enabled/kickoff.yaml'],
+                    File['/srv/www/kickoff']];
 }
