@@ -16,15 +16,29 @@ file {
     '/etc/uwsgi/apps-enabled/kickoff.yaml': 
         notify  => Service['uwsgi'],
         source  => '/vagrant/files/uwsgi/kickoff.yaml';
+    '/srv/www':
+        notify  => Service['nginx'],
+        ensure  => directory;
+    '/srv/www/kickoff':
+        require => File['/srv/www'],
+        notify  => Service['nginx'],
+        ensure  => link,
+        target  => '/vagrant/kickoff';
 }
 
-#yumrepo {
-#    'epel':
-#        baseurl => 'http://repo.i.bitbit.net/rhel6/6Server-$basearch/RPMS.epel',
-#        descr   => 'Extra Packages for Enterprise Linux 6',
-#        gpgkey  => 'file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6',
-#        require => File['/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-6'];
-#}
+user {
+    "kickoff": 
+        require    => Group["kickoff"],
+        managehome => false,
+        ensure     => present,
+        shell      => "/bin/false",
+        gid        => "kickoff";
+}
+
+group {
+    "kickoff":
+        ensure => present;
+}
 
 Service {
     require    => Package[$packages],
@@ -35,5 +49,6 @@ Service {
 
 service {
     'nginx': ;
-    'uwsgi': ;
+    'uwsgi': 
+        require => User["kickoff"];
 }

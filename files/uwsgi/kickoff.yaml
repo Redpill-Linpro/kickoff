@@ -1,6 +1,6 @@
 uwsgi:
-    uid: nginx
-    gid: nginx
+    uid: kickoff
+    gid: kickoff
     socket: /run/shm/kickoff.sock
     plugins: http,python
     processes: 15
