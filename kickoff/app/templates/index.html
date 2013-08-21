@@ -1,25 +1,7 @@
 {% include "header.html" %}
-<h1>Node groups</h1>
-<br/>
+      <div>
+        <h1>Bootstrap starter template</h1>
+        <p class="lead">Use this document as a way to quickly start any new project.<br> All you get is this text and a mostly barebones HTML document.</p>
+      </div>
 
-{% if nodegroups %}
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>Group</th>
-        <th>Nodes</th>
-      </tr>
-    </thead>
-  {% for group in nodegroups | sort %}
-      <tr>
-        <td>
-          <a href="group/{{ group }}">
-            {{ group }}
-          </a>
-        </td>
-        <td>{{ nodegroups[group] }}</td>
-      </tr>
-  {% endfor %}
-  </table>
-{% endif %}
 {% include "footer.html" %}
