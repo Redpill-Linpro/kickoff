@@ -6,4 +6,4 @@ uwsgi:
     processes: 15
     module: kickoff
     callable: app
-    chdir: /srv/www/kickoff/app/
+    chdir: /srv/www/kickoff/app

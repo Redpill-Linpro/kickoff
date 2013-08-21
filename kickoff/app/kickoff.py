@@ -7,7 +7,8 @@ import re
 #import json
 #import socket
 import datetime
-from flask import Flask, g, render_template, Response, make_response, request
+import flask
+#from flask import Flask, g, render_template, Response, make_response, request
 #
 #IMAGEDIR = '/var/www/pxeboot/'
 #VARDIR = '/var/lib/strapper/'
