@@ -32,6 +32,7 @@ Service {
     require    => Package[$packages],
     hasrestart => true,
     enable     => true,
+    notify     => Notify[$fqdn],
 }
 
 service {
@@ -39,4 +40,9 @@ service {
     'uwsgi': 
         require => [File['/etc/uwsgi/apps-enabled/kickoff.yaml'],
                     File['/srv/www/kickoff']];
+}
+
+notify {
+    $fqdn:
+        message => "The kickoff web application is available at http://$ipaddress_eth1/";
 }
