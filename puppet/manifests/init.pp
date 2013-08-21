@@ -44,5 +44,5 @@ service {
 
 notify {
     $fqdn:
-        message => "The kickoff web application is available at http://$ipaddress_eth1/";
+        message => "The kickoff web application is available at http://${ipaddress_eth1}/";
 }
