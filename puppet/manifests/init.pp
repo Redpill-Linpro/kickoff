@@ -18,20 +18,20 @@ file {
         notify  => Service['uwsgi'],
         source  => '/vagrant/files/uwsgi/kickoff.yaml';
     '/srv/www':
-        notify  => Service['nginx'],
-        ensure  => directory;
+        ensure  => directory,
+        notify  => Service['nginx'];
     '/srv/www/kickoff':
+        ensure  => link,
         require => File['/srv/www'],
         notify  => Service['nginx'],
-        ensure  => link,
         target  => '/vagrant/kickoff';
 }
 
 Service {
+    ensure     => true,
     require    => Package[$packages],
     hasrestart => true,
     enable     => true,
-    ensure     => true,
 }
 
 service {
