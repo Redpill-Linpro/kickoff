@@ -1,23 +1,22 @@
 #!/usr/bin/env python
 
 import os
-import cgi
 import re
-#import syslog
+import cgi
+import flask
+import datetime
 #import json
 #import socket
-import datetime
-import flask
-#from flask import Flask, g, render_template, Response, make_response, request
-#
+#import syslog
+
 #IMAGEDIR = '/var/www/pxeboot/'
 #VARDIR = '/var/lib/strapper/'
 #LOGDIR = '/var/log/strapper/'
-#DEBUG = True
-#
+DEBUG = True
+
 app = flask.Flask(__name__)
 app.config.from_object(__name__)
-#
+
 ## Return an array of the images available.
 #def get_images():
 #    images = []
@@ -405,30 +404,38 @@ app.config.from_object(__name__)
 #        return True
 #
 ## Give MAC addresses nice formatting.
-#def clean_mac(mac):
-#    # Remove all uneccessary characters from the given mac address
-#    mac = re.sub('[^\d\w]', '', mac)
-#
-#    # At this point, the mac address should be 12 characters
-#    if len(mac) == 12:
-#        mac = '%s-%s-%s-%s-%s-%s' % \
-#              (mac[0:2],mac[2:4],mac[4:6],mac[6:8],mac[8:10],mac[10:12])
-#        # At this point, the mac address should be 12+5 characters
-#    else:
-#        syslog.syslog(syslog.LOG_ERR,"%s: The MAC address is not valid." % (mac))
-#        mac = False
-#    
-#    return mac
-#
+def clean_mac(mac):
+    # Remove all uneccessary characters from the given mac address
+    mac = re.sub('[^0-9a-f]', '', mac)
+
+    # At this point, the mac address should be 12 characters
+    if len(mac) == 12:
+        mac = '%s-%s-%s-%s-%s-%s' % \
+              (mac[0:2],mac[2:4],mac[4:6],mac[6:8],mac[8:10],mac[10:12])
+        # At this point, the mac address should be 12+5 characters
+    else:
+        #syslog.syslog(syslog.LOG_ERR,"%s: The MAC address is not valid." % (mac))
+        mac = False
+    
+    return mac
+
 @app.route("/")
 def index():
-     return flask.render_template("index.html", title = "Overview")
+    return flask.render_template("index.html", title = "Overview")
 
 @app.route("/about/")
 @app.route("/about")
 def about():
-     return flask.render_template("about.html", title = "About")
-#
+    return flask.render_template("about.html", title = "About")
+
+@app.route("/bootstrap/mac-<mac>.ipxe")
+def bootstrap(mac):
+    mac = clean_mac(mac)
+    if mac:
+        return flask.make_response("jippikayay: " + mac)
+    else:
+        return flask.make_response("The given mac address is not valid", 404)
+
 #@app.route("/group/<group>")
 #def group(group):
 #    nodegroup = get_nodegroup(group)
