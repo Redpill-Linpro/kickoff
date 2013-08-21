@@ -422,7 +422,12 @@ app.config.from_object(__name__)
 #
 @app.route("/")
 def index():
-     return flask.render_template("index.html")
+     return flask.render_template("index.html", title = "Overview")
+
+@app.route("/about/")
+@app.route("/about")
+def about():
+     return flask.render_template("about.html", title = "About")
 #
 #@app.route("/group/<group>")
 #def group(group):
