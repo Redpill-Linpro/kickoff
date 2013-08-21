@@ -1,0 +1,9 @@
+uwsgi:
+    uid: nginx
+    gid: nginx
+    socket: /run/shm/kickoff.sock
+    plugins: http,python
+    processes: 15
+    module: kickoff
+    callable: app
+    chdir: /srv/www/kickoff/app/

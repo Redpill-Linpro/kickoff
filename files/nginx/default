@@ -1,0 +1,15 @@
+server {
+    listen   80;
+    listen   [::]:80 default ipv6only=on;
+    
+    root /srv/www/kickoff
+    index index.html index.htm;
+    
+    server_name localhost;
+
+    location / { try_files $uri @kickoff; }
+    location @kickoff {
+        include uwsgi_params;
+        uwsgi_pass unix:/run/shm/kickoff.sock;
+    }
+}
