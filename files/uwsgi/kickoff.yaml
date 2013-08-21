@@ -1,6 +1,6 @@
 uwsgi:
-    uid: kickoff
-    gid: kickoff
+    uid: www-data
+    gid: www-data
     socket: /run/shm/kickoff.sock
     plugins: http,python
     processes: 15

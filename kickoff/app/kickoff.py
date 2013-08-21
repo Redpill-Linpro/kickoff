@@ -15,8 +15,8 @@ import flask
 #LOGDIR = '/var/log/strapper/'
 #DEBUG = True
 #
-#app = Flask(__name__)
-#app.config.from_object(__name__)
+app = flask.Flask(__name__)
+app.config.from_object(__name__)
 #
 ## Return an array of the images available.
 #def get_images():
@@ -420,10 +420,9 @@ import flask
 #    
 #    return mac
 #
-#@app.route("/")
-#def index():
-#    nodegroups = get_nodegroups()
-#    return render_template("index.html", nodegroups = nodegroups)
+@app.route("/")
+def index():
+     return flask.render_template("index.html")
 #
 #@app.route("/group/<group>")
 #def group(group):

@@ -1,4 +1,5 @@
-$packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim' ]
+$packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim', 
+              'uwsgi-plugin-http' ]
 package {
     $packages: ensure => installed;
 }
@@ -26,20 +27,6 @@ file {
         target  => '/vagrant/kickoff';
 }
 
-user {
-    "kickoff": 
-        require    => Group["kickoff"],
-        managehome => false,
-        ensure     => present,
-        shell      => "/bin/false",
-        gid        => "kickoff";
-}
-
-group {
-    "kickoff":
-        ensure => present;
-}
-
 Service {
     require    => Package[$packages],
     hasrestart => true,
@@ -50,5 +37,5 @@ Service {
 service {
     'nginx': ;
     'uwsgi': 
-        require => User["kickoff"];
+        require => File['/etc/uwsgi/apps-enabled/kickoff.yaml'];
 }
