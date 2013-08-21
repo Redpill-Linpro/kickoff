@@ -13,10 +13,10 @@ file {
         content => "\nThis is the kickoff build environment\n\n";
     '/etc/nginx/sites-enabled/default': 
         notify  => Service['nginx'],
-        source  => '/vagrant/files/nginx/default';
+        source  => '/vagrant/puppet/files/nginx/default';
     '/etc/uwsgi/apps-enabled/kickoff.yaml': 
         notify  => Service['uwsgi'],
-        source  => '/vagrant/files/uwsgi/kickoff.yaml';
+        source  => '/vagrant/puppet/files/uwsgi/kickoff.yaml';
     '/srv/www':
         ensure  => directory,
         notify  => Service['nginx'];
