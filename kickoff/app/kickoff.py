@@ -459,8 +459,9 @@ def bootstrap(mac):
         return flask.make_response("The given mac address is not valid", 400, h)
 
     ipxe = get_ipxe_configuration(mac)
+    data['ipxe'] = ipxe
 
-    if not save_data(mac):
+    if not save_data(mac, data):
         print "Unable to save data for MAC " + mac
         return flask.make_response("Unable to save data for MAC %s" % (mac), 500, h)
 
