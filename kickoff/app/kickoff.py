@@ -5,7 +5,7 @@ import re
 import cgi
 import flask
 import datetime
-#import json
+import json
 #import socket
 #import syslog
 
@@ -74,65 +74,42 @@ app.config.from_pyfile('../conf/kickoff.cfg')
 #""" % (mac)
 #    return text
 
+def timestamp(dt):
+    t = dt.strftime("%Y%m%d%H%M%S")
+    return t
+
 # Save the data for a spesific MAC address.
-def save_data(mac,data):
+def save_data(mac, data = {}):
     path = app.config['VARDIR'] + "/history/" + mac
 
+    now = datetime.datetime.now()
+    ts = timestamp(now)
+
     if not os.path.exists(path):
-        os.makedirs(path)
+        os.makedirs(path,0700)
 
     status = False
 
-    #now = datetime.datetime.now()
-    #data['saved'] = now.strftime("%Y%m%d%H%M%S")
-    #data['saved_iso'] = now.strftime("%Y-%m-%d %H:%M:%S")
+    data['registered'] = now.strftime("%Y-%m-%d %H:%M:%S")
+    data['mac'] = mac
 
-    ## Fix the structure
-    #i = {} 
-    #i[mac] = data
+    filepath = '%s/%s.json' % (path, ts)
+    content = json.dumps(data, indent=4, sort_keys=True)
 
-    #if os.path.isdir(basepath):
-    #    filepath = '%s/%s.json' % (basepath,mac)
-    #    content = json.dumps(i, indent=2, sort_keys=False)
+    if not os.path.isfile(filepath):
+        # The database entry file exists, which means this is a known MAC 
+        # address.
+        try:
+            f = open(filepath,'w')
+            f.write(content)
+            f.close()
 
-    #    if os.path.isfile(filepath):
-    #        # The database entry file exists, which means this is a known MAC 
-    #        # address.
-    #        try:
-    #            f = open(filepath,'w+')
-    #            f.write(content)
-    #            f.close()
+        except:
+            print "Unable to write state file (%s)." % (filepath)
 
-    #        except:
-    #            syslog.syslog(syslog.LOG_ERR,"%s: Unable to update the " \
-    #                "configuration file (%s). " % (mac,filepath))
-
-    #        else:
-    #            status = True
-    #            syslog.syslog(syslog.LOG_INFO,"%s: Configuration updated. " % \
-    #                (mac))
-
-    #    else:
-    #        # The database entry file does not exist, which means that this
-    #        # is the first time this strapper receives a boot request from
-    #        # this MAC address.
-    #        try:
-    #            f = open(filepath,'w')
-    #            f.write(content)
-    #            f.close()
-
-    #        except:
-    #            syslog.syslog(syslog.LOG_ERR,"%s: Unable to create the " \
-    #                "configuration file (%s). " % (mac,filepath))
-
-    #        else:
-    #            status = True
-    #            syslog.syslog(syslog.LOG_INFO,"%s: Configuration created. " % \
-    #                (mac))
-
-    #else:
-    #    syslog.syslog(syslog.LOG_ERR,"%s: Unable to update configuration. " \
-    #        "The var directory (%s) does not exist." % (mac,basepath))
+        else:
+            status = True
+            print "State writte (%s)." % (filepath)
 
     return status
 
@@ -434,9 +411,13 @@ def about():
 @app.route("/bootstrap/mac-<mac>.ipxe")
 def bootstrap(mac):
     mac = clean_mac(mac)
+    data = {}
+    ipxe = False
+
+    h = {'content-type' : 'text/plain'}
 
     if not mac:
-        return flask.make_response("The given mac address is not valid", 404)
+        return flask.make_response("The given mac address is not valid", 400, h)
 
     vardir = app.config['VARDIR'] + '/history/' + mac
 
@@ -444,12 +425,18 @@ def bootstrap(mac):
     # this host before or not.
     if os.path.isdir(vardir):
         print "We have seen this host before (" + vardir + ")"
+        ipxe = "#!ipxe\n# Known host\nexit\n"
+        data['known_host'] = True
     else:
         print "Unknown host (" + vardir + ")"
+        ipxe = "#!ipxe\n# Unknown host\nexit\n"
+        data['known_host'] = False
 
-    save_data(mac, "foo")
+    if not save_data(mac):
+        print "Unable to save data for MAC " + mac
+        return flask.make_response("Unable to save data for MAC %s" % (mac), 500, h)
 
-    return flask.make_response("jippikayay: " + mac)
+    return flask.make_response(ipxe, 200, h)
 
 #@app.route("/group/<group>")
 #def group(group):
