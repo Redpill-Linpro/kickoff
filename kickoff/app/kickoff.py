@@ -12,10 +12,10 @@ import datetime
 #IMAGEDIR = '/var/www/pxeboot/'
 #VARDIR = '/var/lib/strapper/'
 #LOGDIR = '/var/log/strapper/'
-DEBUG = True
 
 app = flask.Flask(__name__)
 app.config.from_object(__name__)
+app.config.from_pyfile('../conf/kickoff.cfg')
 
 ## Return an array of the images available.
 #def get_images():
@@ -431,6 +431,7 @@ def about():
 @app.route("/bootstrap/mac-<mac>.ipxe")
 def bootstrap(mac):
     mac = clean_mac(mac)
+
     if mac:
         return flask.make_response("jippikayay: " + mac)
     else:
