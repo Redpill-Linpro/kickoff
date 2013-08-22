@@ -399,6 +399,45 @@ def clean_mac(mac):
     
     return mac
 
+def get_default_ipxe_configuration(known):
+    path = False
+    ipxe = False
+
+    if known:
+       path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
+    else:
+       path = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
+
+    if path:
+        if os.path.exists(path):
+            try:
+                f = open(path, 'r')
+
+            except:
+                print "Unable to open file %s for reading." % (path)
+
+            else:
+                ipxe = f.read()
+                f.close()
+
+    return ipxe
+            
+
+def get_ipxe_configuration(mac):
+    ipxe = False
+
+    # Check if the directory of this mac address exists to see if we have seen
+    # this host before or not.
+    vardir = app.config['VARDIR'] + '/history/' + mac
+    if os.path.isdir(vardir):
+        # Known host
+        ipxe = get_default_ipxe_configuration(known = True)
+    else:
+        # Unknown host
+        ipxe = get_default_ipxe_configuration(known = False)
+
+    return ipxe
+
 @app.route("/")
 def index():
     return flask.render_template("index.html", title = "Overview")
@@ -419,18 +458,7 @@ def bootstrap(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400, h)
 
-    vardir = app.config['VARDIR'] + '/history/' + mac
-
-    # Check if the directory of this mac address exists to see if we have seen
-    # this host before or not.
-    if os.path.isdir(vardir):
-        print "We have seen this host before (" + vardir + ")"
-        ipxe = "#!ipxe\n# Known host\nexit\n"
-        data['known_host'] = True
-    else:
-        print "Unknown host (" + vardir + ")"
-        ipxe = "#!ipxe\n# Unknown host\nexit\n"
-        data['known_host'] = False
+    ipxe = get_ipxe_configuration(mac)
 
     if not save_data(mac):
         print "Unable to save data for MAC " + mac
