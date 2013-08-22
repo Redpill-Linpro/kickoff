@@ -17,6 +17,11 @@ file {
     '/etc/uwsgi/apps-enabled/kickoff.yaml': 
         notify  => Service['uwsgi'],
         source  => '/vagrant/puppet/files/uwsgi/kickoff.yaml';
+    '/var/lib/kickoff':
+        ensure  => directory,
+        owner   => 'www-data',
+        group   => 'www-data',
+        mode    => 700;
     '/srv/www':
         ensure  => directory,
         notify  => Service['nginx'];

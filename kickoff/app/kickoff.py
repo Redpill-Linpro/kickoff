@@ -73,66 +73,69 @@ app.config.from_pyfile('../conf/kickoff.cfg')
 #reboot
 #""" % (mac)
 #    return text
-#
-## Save the data for a spesific MAC address.
-#def save_data(mac,data):
-#    basepath = app.config['VARDIR']
-#
-#    status = False
-#
-#    now = datetime.datetime.now()
-#    data['saved'] = now.strftime("%Y%m%d%H%M%S")
-#    data['saved_iso'] = now.strftime("%Y-%m-%d %H:%M:%S")
-#
-#    # Fix the structure
-#    i = {} 
-#    i[mac] = data
-#
-#    if os.path.isdir(basepath):
-#        filepath = '%s/%s.json' % (basepath,mac)
-#        content = json.dumps(i, indent=2, sort_keys=False)
-#
-#        if os.path.isfile(filepath):
-#            # The database entry file exists, which means this is a known MAC 
-#            # address.
-#            try:
-#                f = open(filepath,'w+')
-#                f.write(content)
-#                f.close()
-#
-#            except:
-#                syslog.syslog(syslog.LOG_ERR,"%s: Unable to update the " \
-#                    "configuration file (%s). " % (mac,filepath))
-#
-#            else:
-#                status = True
-#                syslog.syslog(syslog.LOG_INFO,"%s: Configuration updated. " % \
-#                    (mac))
-#
-#        else:
-#            # The database entry file does not exist, which means that this
-#            # is the first time this strapper receives a boot request from
-#            # this MAC address.
-#            try:
-#                f = open(filepath,'w')
-#                f.write(content)
-#                f.close()
-#
-#            except:
-#                syslog.syslog(syslog.LOG_ERR,"%s: Unable to create the " \
-#                    "configuration file (%s). " % (mac,filepath))
-#
-#            else:
-#                status = True
-#                syslog.syslog(syslog.LOG_INFO,"%s: Configuration created. " % \
-#                    (mac))
-#
-#    else:
-#        syslog.syslog(syslog.LOG_ERR,"%s: Unable to update configuration. " \
-#            "The var directory (%s) does not exist." % (mac,basepath))
-#
-#    return status
-#
+
+# Save the data for a spesific MAC address.
+def save_data(mac,data):
+    path = app.config['VARDIR'] + "/history/" + mac
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    status = False
+
+    #now = datetime.datetime.now()
+    #data['saved'] = now.strftime("%Y%m%d%H%M%S")
+    #data['saved_iso'] = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    ## Fix the structure
+    #i = {} 
+    #i[mac] = data
+
+    #if os.path.isdir(basepath):
+    #    filepath = '%s/%s.json' % (basepath,mac)
+    #    content = json.dumps(i, indent=2, sort_keys=False)
+
+    #    if os.path.isfile(filepath):
+    #        # The database entry file exists, which means this is a known MAC 
+    #        # address.
+    #        try:
+    #            f = open(filepath,'w+')
+    #            f.write(content)
+    #            f.close()
+
+    #        except:
+    #            syslog.syslog(syslog.LOG_ERR,"%s: Unable to update the " \
+    #                "configuration file (%s). " % (mac,filepath))
+
+    #        else:
+    #            status = True
+    #            syslog.syslog(syslog.LOG_INFO,"%s: Configuration updated. " % \
+    #                (mac))
+
+    #    else:
+    #        # The database entry file does not exist, which means that this
+    #        # is the first time this strapper receives a boot request from
+    #        # this MAC address.
+    #        try:
+    #            f = open(filepath,'w')
+    #            f.write(content)
+    #            f.close()
+
+    #        except:
+    #            syslog.syslog(syslog.LOG_ERR,"%s: Unable to create the " \
+    #                "configuration file (%s). " % (mac,filepath))
+
+    #        else:
+    #            status = True
+    #            syslog.syslog(syslog.LOG_INFO,"%s: Configuration created. " % \
+    #                (mac))
+
+    #else:
+    #    syslog.syslog(syslog.LOG_ERR,"%s: Unable to update configuration. " \
+    #        "The var directory (%s) does not exist." % (mac,basepath))
+
+    return status
+
 ## Read the data for a spesific MAC address. Return a dict with the data.
 #def read_data(mac):
 #    data = {}
@@ -432,10 +435,21 @@ def about():
 def bootstrap(mac):
     mac = clean_mac(mac)
 
-    if mac:
-        return flask.make_response("jippikayay: " + mac)
-    else:
+    if not mac:
         return flask.make_response("The given mac address is not valid", 404)
+
+    vardir = app.config['VARDIR'] + '/history/' + mac
+
+    # Check if the directory of this mac address exists to see if we have seen
+    # this host before or not.
+    if os.path.isdir(vardir):
+        print "We have seen this host before (" + vardir + ")"
+    else:
+        print "Unknown host (" + vardir + ")"
+
+    save_data(mac, "foo")
+
+    return flask.make_response("jippikayay: " + mac)
 
 #@app.route("/group/<group>")
 #def group(group):
