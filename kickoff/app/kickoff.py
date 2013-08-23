@@ -695,6 +695,12 @@ def index():
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, known = known)
 
+@app.route("/domains/")
+@app.route("/domains")
+def domains():
+    return flask.render_template("domains.html", title = "Domains", \
+        active = "domains")
+
 @app.route("/boot-history/")
 @app.route("/boot-history")
 def boot_history():

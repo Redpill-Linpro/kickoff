@@ -64,17 +64,19 @@
             {% endif %}
       </td>
       <td>
-        {% if i.status == 0 %}
-          <span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span>
-        {% elif i.status == 1 %}
-          <span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span>
-        {% elif i.status == 2 %}
-          <span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span>
-        {% elif i.status == 3 %}
-          <span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span>
+        {% if i.status == 0 %}
+          <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
+        {% elif i.status == 1 %}
+          <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span></a>
+        {% elif i.status == 2 %}
+          <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
+        {% elif i.status == 3 %}
+          <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span></a>
         {% endif %}
 
-        <span class="accordion-toggle glyphicon glyphicon-info-sign" data-toggle="collapse" data-parent="#accordion" rel="tooltip" title="Click to show/hide the iPXE configuration that was served." href="#{{ i.id }}"></span>
+        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#{{ i.id }}">
+          <span class="glyphicon glyphicon-info-sign" rel="tooltip" title="Click to show/hide the iPXE configuration that was served."></span>
+        </a>
       </td>
     </tr>
     <tr id="{{ i.id }}" class="panel-collapse collapse">
