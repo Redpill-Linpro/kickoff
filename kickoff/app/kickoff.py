@@ -630,7 +630,6 @@ def get_boot_history(mac):
     for ts in revisions:
         data = get_data(path, ts=ts)
         dt = timestamp_to_dt(ts)
-        print "NOW %s - %s" % (now.strftime("%Y-%m-%d %H:%M:%S"), dt.strftime("%Y-%m-%d %H:%M:%S"))
         data['age'] = humanize_date_difference(dt,now)
         history.append(data)
 
@@ -684,7 +683,7 @@ def index():
     known = get_last_boot_requests(5)
     unknown = get_last_boot_requests(5, status = 1)
     return flask.render_template("index.html", title = "Overview", \
-        unknown = unknown, known = known)
+        active = "overview", unknown = unknown, known = known)
 
 @app.route("/boot-history/")
 @app.route("/boot-history")
@@ -723,12 +722,13 @@ def mac_history(mac):
     history = get_boot_history(mac)
     return flask.render_template("mac_history.html", \
         title = "%s history" % mac, history = history, mac = mac, \
-        active = "history")
+        active="history")
 
 @app.route("/about/")
 @app.route("/about")
 def about():
-    return flask.render_template("about.html", title = "About")
+    return flask.render_template("about.html", title = "About", \
+       active = "about")
 
 @app.route("/bootstrap/mac-<mac>.ipxe")
 def bootstrap(mac):
