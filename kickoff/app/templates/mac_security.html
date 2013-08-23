@@ -16,7 +16,7 @@
         <tr>
           {% if host.remote_addr %}
             <td class="success">
-              IP filter enabled. Allow requests from {{ host.remote_addr }} only.
+              IP filter enabled. Allow requests from <strong>{{ host.remote_addr }}</strong> only.
               {% if host['reverse'] %}
                 ({{ host['reverse'] }})
               {% endif %}
@@ -42,7 +42,7 @@
         <tr>
           {% if host.hostname %}
             <td class="success">
-              Hostname filter enabled. Accept requests with hostname {{ host.hostname }}.
+              Hostname filter enabled. Accept requests with hostname <strong>{{ host.hostname }}</strong>.
               <form action="" method="POST" class="pull-right">
                 <input type="hidden" name="do" value="unlock-hostname-filter"/>
                 <button type="submit">
@@ -53,7 +53,7 @@
           {% else %}
             {% if host.hostname == None %}
               <td class="success">
-                Hostname filter enabled. Accept requests without hostname only.
+                Hostname filter enabled. Accept requests <strong>without hostname</strong> only.
                 <form action="" method="POST" class="pull-right">
                 <input type="hidden" name="do" value="unlock-hostname-filter"/>
                   <button type="submit">
@@ -81,7 +81,7 @@
         <tr>
           {% if host.uuid %}
             <td class="success">
-              UUID filter enabled. Accept requests with SMBIOS UUID {{ host.uuid }}.
+              UUID filter enabled. Accept requests with SMBIOS UUID <strong>{{ host.uuid }}</strong>.
               <form action="" method="POST" class="pull-right">
                 <input type="hidden" name="do" value="unlock-uuid-filter"/>
                 <button type="submit">
@@ -92,7 +92,7 @@
           {% else %}
             {% if host.uuid == None %}
               <td class="success">
-                UUID filter enabled. Accept requests without UUID only.
+                UUID filter enabled. Accept requests <strong>without UUID</strong> only.
                 <form action="" method="POST" class="pull-right">
                 <input type="hidden" name="do" value="unlock-uuid-filter"/>
                   <button type="submit">
