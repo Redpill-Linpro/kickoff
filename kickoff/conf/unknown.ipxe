@@ -1,14 +1,16 @@
 #!ipxe
-# This is the default ipxe configuration that will be served when the host
-# is unknown.
+# This is the default ipxe configuration that will be served when the MAC
+# address is unknown.
 #
 # Get some ideas from: https://gist.github.com/robinsmidsrod/2234639
 #
 
-chain http://bootstrap.i.bitbit.net/pxeboot/memtest.0 passes=1 && set memtest GOOD || set memtest BAD
-set memtest_errno ${errno}
-iseq ${memtest} GOOD && goto memtest-info || iseq ${memtest_errno} 0x1 && set memtest BAD || set memtest UNKNOWN
+#chain http://bootstrap.i.bitbit.net/pxeboot/memtest.0 passes=1 && set memtest GOOD || set memtest BAD
+#set memtest_errno ${errno}
+#iseq ${memtest} GOOD && goto memtest-info || iseq ${memtest_errno} 0x1 && set memtest BAD || set memtest UNKNOWN
+#
+#chain http://bootstrap.i.bitbit.net/memtest-report.cgi?result=${memtest}&mac=${mac}&uuid=${uuid}&hostname=${hostname}
+#
+#reboot
 
-chain http://bootstrap.i.bitbit.net/memtest-report.cgi?result=${memtest}&mac=${mac}&uuid=${uuid}&hostname=${hostname}
-
-reboot
+exit

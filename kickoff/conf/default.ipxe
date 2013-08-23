@@ -1,6 +1,4 @@
 #!ipxe
-# This is the default ipxe configuration that will be served when the host
-# is known.
-
+# This is the default ipxe configuration that will be served when the MAC
+# address is known.
 exit
-
