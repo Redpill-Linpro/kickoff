@@ -427,25 +427,30 @@ def clean_mac(mac):
 def get_ipxe_configuration(mac, permission, host):
     ipxe = False
     path = False
+    status = False
 
     # If not permission, serve some exit-message
     if not permission:
         path = app.config['DEFAULT_NO_PERMISSION_IPXE_CONFIGURATION']
+        status = 0
 
     else:
         # Check if the directory of this mac address exists to see if we have seen
         # this host before or not.
-        d = app.config['HOST_DIR'] + '/' + mac
+        d = app.config['STATE_DIR'] + '/' + mac
         if os.path.isdir(d):
             # Known host
             # Look for configuration, if none is found:
             if 'ipxe' in host:
                 ipxe = host['ipxe']
+                status = 3
             else:
                 path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
+                status = 2
         else:
             # Unknown host
             path = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
+            status = 1
 
     if not ipxe and path:
         if os.path.exists(path):
@@ -459,7 +464,7 @@ def get_ipxe_configuration(mac, permission, host):
                 ipxe = f.read()
                 f.close()
 
-    return ipxe
+    return (status,ipxe)
 
 def get_data(path, ts = False):
     if not os.path.isdir(path):
@@ -583,12 +588,13 @@ def bootstrap(mac):
     permission = get_permission(host, mac, uuid, remote_addr)
 
     # If permission is granted, get configuration:
-    ipxe = get_ipxe_configuration(mac, permission, host)
+    (status, ipxe) = get_ipxe_configuration(mac, permission, host)
 
     data = {}
     data['ipxe']        = ipxe
     data['uuid']        = uuid
     data['remote_addr'] = remote_addr
+    data['status']      = status
 
     if not save_state(mac, data):
         print "Unable to write state for MAC " + mac
