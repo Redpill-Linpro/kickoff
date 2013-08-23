@@ -1,4 +1,5 @@
 #!ipxe
 # This is the default ipxe configuration that will be served when the MAC
-# address is known.
+# address is known. It is probably a good idea to leave the host alone here,
+# as it may already have plans for booting on its local hard drive.
 exit
