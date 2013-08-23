@@ -20,16 +20,27 @@
   </div>
   <div class="col-md-4">
     <h2>Boot history</h2>
-    <ul class="list-unstyled">
-        <li>Foo</li>
-    </ul>
+    <table class="table table-striped">
+    {% for i in unknown %}
+      <tr>
+        <td>{{ i.registered }}</td>
+        <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+      </tr>
+    {% endfor %}
+    </table>
     <a href="/known-hosts">More...</a>
  </div>
   <div class="col-md-4">
-    <h2>New hosts</h2>
-    <ul class="list-unstyled">
-    </ul>
-    <a href="/new-hosts">More...</a>
+    <h2>Discovered hosts</h2>
+    <table class="table table-striped">
+    {% for i in unknown %}
+      <tr>
+        <td>{{ i.registered }}</td>
+        <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+      </tr>
+    {% endfor %}
+    </table>
+    <a href="/discovered-hosts">More...</a>
   </div>
 </div>
 

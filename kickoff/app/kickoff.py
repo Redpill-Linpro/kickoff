@@ -70,8 +70,14 @@ app.config.from_pyfile('../conf/kickoff.cfg')
 #""" % (mac)
 #    return text
 
+# Convert from datetime object to timestamp
 def timestamp(dt):
     t = dt.strftime("%Y%m%d%H%M%S")
+    return t
+
+# Convert from timestamp to datetime object
+def dt(timestamp):
+    t = datetime.strptime(timestamp, '%Y%m%d%H%M%S')
     return t
 
 # Save the data for a spesific MAC address.
@@ -120,6 +126,7 @@ def save_state(mac, data = {}):
 
     data['registered'] = now.strftime("%Y-%m-%d %H:%M:%S")
     data['mac'] = mac
+    data['ts'] = int(ts)
 
     filepath = '%s/%s.json' % (path, ts)
     content = json.dumps(data, indent=4, sort_keys=True)
@@ -411,7 +418,8 @@ def save_state(mac, data = {}):
 ## Give MAC addresses nice formatting.
 def clean_mac(mac):
     # Remove all uneccessary characters from the given mac address
-    mac = re.sub('[^0-9a-f]', '', mac)
+    mac = re.sub('[^0-9a-fA-F]', '', mac)
+    mac = mac.lower()
 
     # At this point, the mac address should be 12 characters
     if len(mac) == 12:
@@ -591,9 +599,46 @@ def get_boot_history(mac):
 
     return history
 
+def get_last_boot_requests(count, status = False):
+    macs = get_all_mac_addresses()
+    entries = []
+    for mac in macs:
+        history = get_boot_history(mac)
+        for i in history:
+            ts = i['ts']
+
+            if status == False:
+                entries.append(i)
+            else:
+                if i['status'] == status:
+                    entries.append(i)
+
+    ret = sorted(entries, key=lambda k: (-k['ts']))
+ 
+    if count:
+        return ret[0:count]
+    else:
+        return ret
+
 @app.route("/")
 def index():
-    return flask.render_template("index.html", title = "Overview")
+    known = get_last_boot_requests(5)
+    unknown = get_last_boot_requests(5, status = 1)
+    return flask.render_template("index.html", title = "Overview", unknown = unknown)
+
+@app.route("/discovered-hosts/")
+@app.route("/discovered-hosts")
+def discovered_hosts():
+    unknown = get_last_boot_requests(False, status = 1)
+    return flask.render_template("discovered-hosts.html", title = "Discovered hosts", unknown = unknown)
+
+@app.route("/mac/<mac>")
+def mac(mac):
+    mac = clean_mac(mac)
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    return flask.render_template("mac.html", title = mac, mac = mac, active="home")
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
@@ -602,8 +647,8 @@ def mac_history(mac):
         return flask.make_response("The given mac address is not valid", 400)
 
     history = get_boot_history(mac)
-    return flask.render_template("mac_history.html", title = mac, \
-        history = history, mac = mac)
+    return flask.render_template("mac_history.html", title = "%s history" % mac, \
+        history = history, mac = mac, active="history")
 
 @app.route("/about/")
 @app.route("/about")
