@@ -10,111 +10,113 @@
     The basic security feature is to allow requests from the same IP address and with the same UUID string as in the initial boot request only. If the SMBIOS UUID or the IP address is changed during the lifecycle of the host, update the filters below.
   </p>
   <div class="col-md-7">
-    <table class="table table-bordered">
-      <tr>
-        {% if host.remote_addr %}
-          <td class="success">
-            IP filter enabled. Allow requests from {{ host.remote_addr }} only.
-            {% if host['reverse'] %}
-              ({{ host['reverse'] }})
+    <table class="table table-bordered table-hover">
+      <tbody>
+        <tr>
+          {% if host.remote_addr %}
+            <td class="success">
+              IP filter enabled. Allow requests from {{ host.remote_addr }} only.
+              {% if host['reverse'] %}
+                ({{ host['reverse'] }})
+              {% endif %}
+              <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="unlock-ip-filter"/>
+                <button type="submit">
+                  <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
+                </button>
+              </form>
+            </td>
+          {% else %}
+            <td class="danger">
+              IP filter disabled. Allow requests from all IP addresses.
+              <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="lock-ip-filter"/>
+                <button type="submit">
+                  <span rel="tooltip" title="Lock to {{ boot['remote_addr'] }}" class="glyphicon glyphicon-lock"></span>
+                </button>
+              </form>
+            </td>
+          {% endif %}
+        </tr>
+        <tr>
+          {% if host.hostname %}
+            <td class="success">
+              Hostname filter enabled. Accept requests with hostname {{ host.hostname }}.
+              <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="unlock-hostname-filter"/>
+                <button type="submit">
+                  <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
+                </button>
+              </form>
+            </td>
+          {% else %}
+            {% if host.hostname == None %}
+              <td class="success">
+                Hostname filter enabled. Accept requests without hostname only.
+                <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="unlock-hostname-filter"/>
+                  <button type="submit">
+                    <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
+                  </button>
+                </form>
+              </td>
+            {% else %}
+              <td class="danger">
+                Hostname filter disabled. Allow requests from all hostnames.
+                <form action="" method="POST" class="pull-right">
+                  <input type="hidden" name="do" value="lock-hostname-filter"/>
+                  <button type="submit">
+                    {% if boot['hostname'] == None %}
+                      <span rel="tooltip" title="Lock to no hostname" class="glyphicon glyphicon-lock"></span>
+                    {% else %}
+                      <span rel="tooltip" title="Lock to hostname {{ boot['hostname'] }}" class="glyphicon glyphicon-lock"></span>
+                    {% endif %}
+                  </button>
+                </form>
+              </td>
             {% endif %}
-            <form action="" method="POST" class="pull-right">
-              <input type="hidden" name="do" value="unlock-ip-filter"/>
-              <button type="submit">
-                <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
-              </button>
-            </form>
-          </td>
-        {% else %}
-          <td class="danger">
-            IP filter disabled. Allow requests from all IP addresses.
-            <form action="" method="POST" class="pull-right">
-              <input type="hidden" name="do" value="lock-ip-filter"/>
-              <button type="submit">
-                <span rel="tooltip" title="Lock to {{ boot['remote_addr'] }}" class="glyphicon glyphicon-lock"></span>
-              </button>
-            </form>
-          </td>
-        {% endif %}
-      </tr>
-      <tr>
-        {% if host.hostname %}
-          <td class="success">
-            Hostname filter enabled. Accept requests with hostname {{ host.hostname }}.
-            <form action="" method="POST" class="pull-right">
-              <input type="hidden" name="do" value="unlock-hostname-filter"/>
-              <button type="submit">
-                <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
-              </button>
-            </form>
-          </td>
-        {% else %}
-          {% if host.hostname == None %}
+          {% endif %}
+        </tr>
+        <tr>
+          {% if host.uuid %}
             <td class="success">
-              Hostname filter enabled. Accept requests without hostname only.
+              UUID filter enabled. Accept requests with SMBIOS UUID {{ host.uuid }}.
               <form action="" method="POST" class="pull-right">
-              <input type="hidden" name="do" value="unlock-hostname-filter"/>
+                <input type="hidden" name="do" value="unlock-uuid-filter"/>
                 <button type="submit">
                   <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
                 </button>
               </form>
             </td>
           {% else %}
-            <td class="danger">
-              Hostname filter disabled. Allow requests from all hostnames.
-              <form action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="lock-hostname-filter"/>
-                <button type="submit">
-                  {% if boot['hostname'] == None %}
-                    <span rel="tooltip" title="Lock to no hostname" class="glyphicon glyphicon-lock"></span>
-                  {% else %}
-                    <span rel="tooltip" title="Lock to hostname {{ boot['hostname'] }}" class="glyphicon glyphicon-lock"></span>
-                  {% endif %}
-                </button>
-              </form>
-            </td>
+            {% if host.uuid == None %}
+              <td class="success">
+                UUID filter enabled. Accept requests without UUID only.
+                <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="unlock-uuid-filter"/>
+                  <button type="submit">
+                    <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
+                  </button>
+                </form>
+              </td>
+            {% else %}
+              <td class="danger">
+                UUID filter disabled. Allow requests from all UUIDs.
+                <form action="" method="POST" class="pull-right">
+                  <input type="hidden" name="do" value="lock-uuid-filter"/>
+                  <button type="submit">
+                    {% if boot['uuid'] == None %}
+                      <span rel="tooltip" title="Lock to no UUID" class="glyphicon glyphicon-lock"></span>
+                    {% else %}
+                      <span rel="tooltip" title="Lock to UUID {{ boot['uuid'] }}" class="glyphicon glyphicon-lock"></span>
+                    {% endif %}
+                  </button>
+                </form>
+              </td>
+            {% endif %}
           {% endif %}
-        {% endif %}
-      </tr>
-      <tr>
-        {% if host.uuid %}
-          <td class="success">
-            UUID filter enabled. Accept requests with SMBIOS UUID {{ host.uuid }}.
-            <form action="" method="POST" class="pull-right">
-              <input type="hidden" name="do" value="unlock-uuid-filter"/>
-              <button type="submit">
-                <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
-              </button>
-            </form>
-          </td>
-        {% else %}
-          {% if host.uuid == None %}
-            <td class="success">
-              UUID filter enabled. Accept requests without UUID only.
-              <form action="" method="POST" class="pull-right">
-              <input type="hidden" name="do" value="unlock-uuid-filter"/>
-                <button type="submit">
-                  <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
-                </button>
-              </form>
-            </td>
-          {% else %}
-            <td class="danger">
-              UUID filter disabled. Allow requests from all UUIDs.
-              <form action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="lock-uuid-filter"/>
-                <button type="submit">
-                  {% if boot['uuid'] == None %}
-                    <span rel="tooltip" title="Lock to no UUID" class="glyphicon glyphicon-lock"></span>
-                  {% else %}
-                    <span rel="tooltip" title="Lock to UUID {{ boot['uuid'] }}" class="glyphicon glyphicon-lock"></span>
-                  {% endif %}
-                </button>
-              </form>
-            </td>
-          {% endif %}
-        {% endif %}
-      </tr>
+        </tr>
+      </tbody>
     </table>
   </div>
   <div class="col-md-5">
