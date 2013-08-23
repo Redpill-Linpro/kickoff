@@ -51,7 +51,7 @@
         {% else %}
           {% if host.hostname == None %}
             <td class="success">
-              Hostname filter enabled. Accept requests without hostname.
+              Hostname filter enabled. Accept requests without hostname only.
               <form action="" method="POST" class="pull-right">
               <input type="hidden" name="do" value="unlock-hostname-filter"/>
                 <button type="submit">
@@ -121,7 +121,7 @@
     <div class="panel panel-default">
       <div class="panel-heading">Important</div>
       <div class="panel-body">
-        The preset values for the filter have been read from the <a href="/mac/{{ mac }}/history">latest boot request</a> to this MAC address. Please make sure that the valid host was used before locking down the configuration.
+        The values preset for the filter have been read from the <a href="/mac/{{ mac }}/history">last boot request</a> to this MAC address. Please make sure that the valid host was used before locking down the configuration.
       </div>
     </div>
   </div>
