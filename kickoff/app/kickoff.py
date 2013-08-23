@@ -9,10 +9,6 @@ import json
 #import socket
 #import syslog
 
-#IMAGEDIR = '/var/www/pxeboot/'
-#VARDIR = '/var/lib/strapper/'
-#LOGDIR = '/var/log/strapper/'
-
 app = flask.Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_pyfile('../conf/kickoff.cfg')
@@ -79,8 +75,8 @@ def timestamp(dt):
     return t
 
 # Save the data for a spesific MAC address.
-def save_data(mac, data = {}):
-    path = app.config['VARDIR'] + "/history/" + mac
+def save_host(mac, data = {}):
+    path = app.config['HOST_DIR'] + '/' + mac
 
     now = datetime.datetime.now()
     ts = timestamp(now)
@@ -96,20 +92,49 @@ def save_data(mac, data = {}):
     filepath = '%s/%s.json' % (path, ts)
     content = json.dumps(data, indent=4, sort_keys=True)
 
-    if not os.path.isfile(filepath):
-        # The database entry file exists, which means this is a known MAC 
-        # address.
-        try:
-            f = open(filepath,'w')
-            f.write(content)
-            f.close()
+    try:
+        f = open(filepath,'w+')
+        f.write(content)
+        f.close()
 
-        except:
-            print "Unable to write state file (%s)." % (filepath)
+    except:
+        print "Unable to write host file (%s)." % (filepath)
 
-        else:
-            status = True
-            print "State writte (%s)." % (filepath)
+    else:
+        status = True
+        print "Host file written (%s)." % (filepath)
+
+    return status
+
+# Save the data for a spesific MAC address.
+def save_state(mac, data = {}):
+    path = app.config['STATE_DIR'] + '/' + mac
+
+    now = datetime.datetime.now()
+    ts = timestamp(now)
+
+    if not os.path.exists(path):
+        os.makedirs(path,0700)
+
+    status = False
+
+    data['registered'] = now.strftime("%Y-%m-%d %H:%M:%S")
+    data['mac'] = mac
+
+    filepath = '%s/%s.json' % (path, ts)
+    content = json.dumps(data, indent=4, sort_keys=True)
+
+    try:
+        f = open(filepath,'w+')
+        f.write(content)
+        f.close()
+
+    except:
+        print "Unable to write state file (%s)." % (filepath)
+
+    else:
+        status = True
+        print "State file created (%s)." % (filepath)
 
     return status
 
@@ -399,11 +424,11 @@ def clean_mac(mac):
     
     return mac
 
-def get_default_ipxe_configuration(known):
+def get_default_ipxe_configuration(known_host):
     path = False
     ipxe = False
 
-    if known:
+    if known_host:
        path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
     else:
        path = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
@@ -428,13 +453,13 @@ def get_ipxe_configuration(mac):
 
     # Check if the directory of this mac address exists to see if we have seen
     # this host before or not.
-    vardir = app.config['VARDIR'] + '/history/' + mac
-    if os.path.isdir(vardir):
+    path = app.config['STATE_DIR'] + '/' + mac
+    if os.path.isdir(path):
         # Known host
-        ipxe = get_default_ipxe_configuration(known = True)
+        ipxe = get_default_ipxe_configuration(known_host = True)
     else:
         # Unknown host
-        ipxe = get_default_ipxe_configuration(known = False)
+        ipxe = get_default_ipxe_configuration(known_host = False)
 
     return ipxe
 
@@ -458,12 +483,24 @@ def bootstrap(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400, h)
 
+    try:
+        data['remote_addr'] = flask.request.headers.get('remote_addr')
+
+    except:
+        pass
+
+    # Get host configuration
+
+    # Check permissions
+    # If permission is not granted, print error message and exit:
+
+    # If permission is granted, get configuration:
     ipxe = get_ipxe_configuration(mac)
     data['ipxe'] = ipxe
 
-    if not save_data(mac, data):
-        print "Unable to save data for MAC " + mac
-        return flask.make_response("Unable to save data for MAC %s" % (mac), 500, h)
+    if not save_state(mac, data):
+        print "Unable to write state for MAC " + mac
+        return flask.make_response("Unable to write state for MAC %s" % (mac), 500, h)
 
     return flask.make_response(ipxe, 200, h)
 
