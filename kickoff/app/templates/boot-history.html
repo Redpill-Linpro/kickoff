@@ -12,40 +12,54 @@
     <thead>
       <tr>
        <th>Timestamp</th>
+       <th>Age</th>
        {% if not mac %}
          <th>MAC address</th>
        {% endif %}
        <th>IP address</th>
+       <th>DNS</th>
        <th>UUID</th>
        <th>Status</th>
       </tr>
     </thead>
     <tbody>
-    {% for entry in entries %}
+    {% for i in entries %}
       <tr>
-      <td>{{ entry['registered'] }}</td>
-      {% if not mac %}
-        <td><a href="/mac/{{ entry['mac'] }}">{{ entry['mac'] }}</a></td>
-      {% endif %}
-      <td>{{ entry['remote_addr'] }}</td>
-      <td>
-         {% if entry['uuid'] %}
-           {{ entry['uuid'] }}
-         {% else %}
-           UUID not set
-         {% endif %}
-      </td>
-      <td>
-        {% if entry['status'] == 0 %}
-          Permission denied
-        {% elif entry['status'] == 1 %}
-          The host was discovered
-        {% elif entry['status'] == 2 %}
-          Served default configuration
-        {% elif entry['status'] == 3 %}
-          Served custom configuration
+        <td>{{ i.registered }}</td>
+        <td>{{ i.age }}</td>
+        {% if not mac %}
+          <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
         {% endif %}
-      </td>
+        <td>{{ i.remote_addr }}</td>
+        <td>
+              {% if i.reverse %}
+                {{ i.reverse }}
+              {% else %}
+                Lookup failed
+              {% endif %}
+        </td>
+        <td>
+           {% if i.uuid %}
+             {{ i.uuid }}
+           {% else %}
+             UUID not set
+           {% endif %}
+        </td>
+        <td>
+          {% if i.status == 0 %}
+            <span class="glyphicon glyphicon-ban-circle"></span>
+            <small>Permission denied</small>
+          {% elif i.status == 1 %}
+            <span class="glyphicon glyphicon-star"></span>
+            <small>The host was discovered</small>
+          {% elif i.status == 2 %}
+            <span class="glyphicon glyphicon-hdd"></span>
+            <small>Served default configuration</small>
+          {% elif i.status == 3 %}
+            <span class="glyphicon glyphicon-cloud-download"></span>
+            <small>Served custom configuration</small>
+          {% endif %}
+        </td>
       </tr>
     {% endfor %}
     </tbody>

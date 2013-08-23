@@ -71,13 +71,13 @@ app.config.from_pyfile('../conf/kickoff.cfg')
 #    return text
 
 # Convert from datetime object to timestamp
-def timestamp(dt):
+def dt_to_timestamp(dt):
     t = dt.strftime("%Y%m%d%H%M%S")
     return t
 
 # Convert from timestamp to datetime object
-def dt(timestamp):
-    t = datetime.strptime(timestamp, '%Y%m%d%H%M%S')
+def timestamp_to_dt(timestamp):
+    t = datetime.datetime.strptime(str(timestamp), '%Y%m%d%H%M%S')
     return t
 
 # Save the data for a spesific MAC address.
@@ -85,7 +85,7 @@ def save_host(mac, data = {}):
     path = app.config['HOST_DIR'] + '/' + mac
 
     now = datetime.datetime.now()
-    ts = timestamp(now)
+    ts = dt_to_timestamp(now)
 
     if not os.path.exists(path):
         os.makedirs(path,0700)
@@ -117,7 +117,7 @@ def save_state(mac, data = {}):
     path = app.config['STATE_DIR'] + '/' + mac
 
     now = datetime.datetime.now()
-    ts = timestamp(now)
+    ts = dt_to_timestamp(now)
 
     if not os.path.exists(path):
         os.makedirs(path,0700)
@@ -527,7 +527,7 @@ def get_permission(host, mac, uuid, remote_addr):
 
     return True
 
-def get_host_configuration(mac, uuid, remote_addr):
+def get_host_configuration(mac, uuid = False, remote_addr = False):
     data = {}
     path = app.config['HOST_DIR'] + '/' + mac
 
@@ -542,7 +542,7 @@ def get_host_configuration(mac, uuid, remote_addr):
         data['remote_addr'] = remote_addr
 
         now = datetime.datetime.now()
-        ts = timestamp(now)
+        ts = dt_to_timestamp(now)
 
         data['registered'] = now.strftime("%Y-%m-%d %H:%M:%S")
         if not os.path.exists(path):
@@ -590,12 +590,48 @@ def get_all_mac_addresses():
                 macs.append(mac)
     return macs
 
+# https://gist.github.com/nzjrs/207624
+def humanize_date_difference(now, otherdate=None, offset=None):
+    if otherdate:
+        dt = otherdate - now
+        offset = dt.seconds + (dt.days * 60*60*24)
+    if offset:
+        delta_s = offset % 60
+        offset /= 60
+        delta_m = offset % 60
+        offset /= 60
+        delta_h = offset % 24
+        offset /= 24
+        delta_d = offset
+    else:
+        return "now"
+ 
+    if delta_d > 1:
+        if delta_d > 6:
+            date = now + datetime.timedelta(days=-delta_d, hours=-delta_h, minutes=-delta_m)
+            return date.strftime('%A, %Y %B %m, %H:%I')
+        else:
+            wday = now + datetime.timedelta(days=-delta_d)
+            return wday.strftime('%A')
+    if delta_d == 1:
+        return "Yesterday"
+    if delta_h > 0:
+        return "%dh %dm" % (delta_h, delta_m)
+    if delta_m > 0:
+        return "%dm %ds" % (delta_m, delta_s)
+    else:
+        return "%ds" % delta_s
+
 def get_boot_history(mac):
     history = []
     path = app.config['STATE_DIR'] + '/' + mac
     revisions = get_revisions(path)
+    now = datetime.datetime.now()
     for ts in revisions:
         data = get_data(path, ts=ts)
+        dt = timestamp_to_dt(ts)
+        print "NOW %s - %s" % (now.strftime("%Y-%m-%d %H:%M:%S"), dt.strftime("%Y-%m-%d %H:%M:%S"))
+        data['age'] = humanize_date_difference(dt,now)
         history.append(data)
 
     return history
@@ -611,8 +647,6 @@ def get_last_boot_requests(count, mac = False, status = False):
     for mac in macs:
         history = get_boot_history(mac)
         for i in history:
-            ts = i['ts']
-
             if status == False:
                 entries.append(i)
             else:
@@ -638,11 +672,19 @@ def extract_domain_from_fqdn(fqdn):
 
     return group
 
+def get_reverse_address(ip):
+    try:
+        reverse = socket.gethostbyaddr(ip)[0]
+    except:
+        reverse = False
+    return reverse
+
 @app.route("/")
 def index():
     known = get_last_boot_requests(5)
     unknown = get_last_boot_requests(5, status = 1)
-    return flask.render_template("index.html", title = "Overview", unknown = unknown)
+    return flask.render_template("index.html", title = "Overview", \
+        unknown = unknown, known = known)
 
 @app.route("/boot-history/")
 @app.route("/boot-history")
@@ -651,7 +693,8 @@ def boot_history():
     mac = flask.request.args.get('mac', False)
     entries = get_last_boot_requests(False, mac = mac, status = status)
 
-    return flask.render_template("boot-history.html", title = "Boot history", entries = entries, mac = mac, status = status)
+    return flask.render_template("boot-history.html", title = "Boot history", \
+        active = "history", entries = entries, mac = mac, status = status)
 
 @app.route("/mac/<mac>")
 def mac(mac):
@@ -659,7 +702,11 @@ def mac(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    return flask.render_template("mac.html", title = mac, mac = mac, active="home")
+    host = get_host_configuration(mac)
+    host['reverse'] = get_reverse_address(host['remote_addr'])
+
+    return flask.render_template("mac.html", title = mac, mac = mac, \
+        active="home", host = host)
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
@@ -705,11 +752,7 @@ def bootstrap(mac):
     data['remote_addr'] = remote_addr
     data['status']      = status
 
-    try:
-        reverse = socket.gethostbyaddr(remote_addr)[0]
-    except:
-        reverse = False
-
+    reverse = get_reverse_address(remote_addr)
     if reverse:
         data['reverse'] = reverse
         data['domain'] = extract_domain_from_fqdn(reverse)

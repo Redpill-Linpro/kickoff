@@ -1,43 +1,106 @@
 {% include "header.html" %}
 
 <div class="jumbotron">
-  <h1>Kickoff!</h1>
-  <p class="lead">Kick the baby</p>
-  <a class="btn btn-large btn-success" href="#">Get started today</a>
+  <h1>Kickoff</h1>
 </div>
 
 <div class="row">
   <div class="col-md-6">
     <h2>Boot history</h2>
     <table class="table table-striped">
-    {% for i in unknown %}
-      <tr>
-        <td>{{ i.registered }}</td>
-        <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
-      </tr>
-    {% endfor %}
+      <thead>
+        <th>Age</th>
+        <th>MAC</th>
+        <th>DNS</th>
+      </thead>
+      <tbody>
+      {% for i in known %}
+        <tr>
+          <td>{{ i.age }}</td>
+          <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+          <td>
+            {% if i.reverse %}
+              {{ i.reverse }}
+            {% else %}
+              Lookup failed
+            {% endif %}
+          </td>
+          <td>
+            {% if i.status == 0 %}
+              <span class="glyphicon glyphicon-ban-circle"></span></a>
+            {% elif i.status == 1 %}
+              <span class="glyphicon glyphicon-star"></span>
+            {% elif i.status == 2 %}
+              <span class="glyphicon glyphicon-hdd"></span>
+            {% elif i.status == 3 %}
+              <span class="glyphicon glyphicon-cloud-download"></span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
     </table>
     <a href="/boot-history">More...</a>
  </div>
   <div class="col-md-6">
     <h2>Discovered hosts</h2>
     <table class="table table-striped">
-    {% for i in unknown %}
-      <tr>
-        <td>{{ i.registered }}</td>
-        <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
-        <td>
-          {% if i.reverse %}
-            {{ i.reverse }}
-          {% endif %}
-        </td>
-      </tr>
-    {% endfor %}
+      <thead>
+        <th>Age</th>
+        <th>MAC</th>
+        <th>DNS</th>
+      </thead>
+      <tbody>
+      {% for i in unknown %}
+        <tr>
+          <td>{{ i.age }}</td>
+          <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+          <td>
+            {% if i.reverse %}
+              {{ i.reverse }}
+            {% else %}
+              Lookup failed
+            {% endif %}
+          </td>
+          <td>
+            {% if i.status == 0 %}
+              <span class="glyphicon glyphicon-ban-circle"></span>
+            {% elif i.status == 1 %}
+              <span class="glyphicon glyphicon-star"></span>
+            {% elif i.status == 2 %}
+              <span class="glyphicon glyphicon-hdd"></span>
+            {% elif i.status == 3 %}
+              <span class="glyphicon glyphicon-cloud-download"></span>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
     </table>
     <a href="/boot-history/?status=1">More...</a>
   </div>
 </div>
 
-<hr>
+<!--
+<div class="row">
+  <div class="col-md-4">
+    <table class="table">
+      <tr>
+        <td><span class="glyphicon glyphicon-ban-circle"></span></td>
+        <td>Permission denied</td>
+      </tr><tr>
+        <td><span class="glyphicon glyphicon-star"></span></td>
+        <td>Host discovered</td>
+      </tr><tr>
+        <td><span class="glyphicon glyphicon-hdd"></span></td>
+        <td>No custom configuration found for this host</td>
+      </tr><tr>
+        <td><span class="glyphicon glyphicon-cloud-download"></span></td>
+        <td>Custom configuration served to this host</td>
+      </tr>
+    </table>
+  </div>
+</div>
+-->
 
 {% include "footer.html" %}
