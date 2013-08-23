@@ -7,18 +7,7 @@
 </div>
 
 <div class="row">
-  <div class="col-md-4">
-    <h2>Domains</h2>
-    <ul class="list-unstyled">
-      <li>customer1.c.bitbit.net</li>
-      <li>customer2.c.bitbit.net</li>
-      <li>customer3.c.bitbit.net</li>
-      <li>customer4.c.bitbit.net</li>
-      <li>customer5.c.bitbit.net</li>
-    </ul>
-    <a href="/boot-history">More...</a>
-  </div>
-  <div class="col-md-4">
+  <div class="col-md-6">
     <h2>Boot history</h2>
     <table class="table table-striped">
     {% for i in unknown %}
@@ -30,13 +19,18 @@
     </table>
     <a href="/boot-history">More...</a>
  </div>
-  <div class="col-md-4">
+  <div class="col-md-6">
     <h2>Discovered hosts</h2>
     <table class="table table-striped">
     {% for i in unknown %}
       <tr>
         <td>{{ i.registered }}</td>
         <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+        <td>
+          {% if i.reverse %}
+            {{ i.reverse }}
+          {% endif %}
+        </td>
       </tr>
     {% endfor %}
     </table>

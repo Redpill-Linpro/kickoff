@@ -583,10 +583,11 @@ def get_revisions(path):
 def get_all_mac_addresses():
     path = app.config['STATE_DIR']
     macs = []
-    for mac in os.listdir(path):
-        p = path + "/" + mac
-        if os.path.isdir(p):
-            macs.append(mac)
+    if os.path.isdir(path):
+        for mac in os.listdir(path):
+            p = path + "/" + mac
+            if os.path.isdir(p):
+                macs.append(mac)
     return macs
 
 def get_boot_history(mac):
@@ -624,6 +625,18 @@ def get_last_boot_requests(count, mac = False, status = False):
         return ret[0:count]
     else:
         return ret
+
+# Use the DNS PTR to create logical groups of nodes. This method converts fqdn
+# to group name.
+def extract_domain_from_fqdn(fqdn):
+    group = False
+    rule = re.compile('^[^\.]+\.(.*)')
+    res = rule.search(fqdn)
+    if res:
+        if res.group(1):
+            group = res.group(1)
+
+    return group
 
 @app.route("/")
 def index():
@@ -691,6 +704,15 @@ def bootstrap(mac):
     data['uuid']        = uuid
     data['remote_addr'] = remote_addr
     data['status']      = status
+
+    try:
+        reverse = socket.gethostbyaddr(remote_addr)[0]
+    except:
+        reverse = False
+
+    if reverse:
+        data['reverse'] = reverse
+        data['domain'] = extract_domain_from_fqdn(reverse)
 
     if not save_state(mac, data):
         print "Unable to write state for MAC " + mac
