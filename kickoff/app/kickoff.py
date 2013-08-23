@@ -697,7 +697,12 @@ def boot_history():
         active = "history", entries = entries, mac = mac, status = status)
 
 @app.route("/mac/<mac>")
+@app.route("/mac/<mac>/")
 def mac(mac):
+    return flask.redirect('/mac/%s/history' % mac)
+
+@app.route("/mac/<mac>/configuration")
+def mac_configuration(mac):
     mac = clean_mac(mac)
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
@@ -705,8 +710,9 @@ def mac(mac):
     host = get_host_configuration(mac)
     host['reverse'] = get_reverse_address(host['remote_addr'])
 
-    return flask.render_template("mac.html", title = mac, mac = mac, \
-        active="home", host = host)
+    return flask.render_template("mac_configuration.html", \
+        title = "%s configuration" % mac, mac = mac, \
+        active = "configuration", host = host)
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
@@ -715,8 +721,9 @@ def mac_history(mac):
         return flask.make_response("The given mac address is not valid", 400)
 
     history = get_boot_history(mac)
-    return flask.render_template("mac_history.html", title = "%s history" % mac, \
-        history = history, mac = mac, active="history")
+    return flask.render_template("mac_history.html", \
+        title = "%s history" % mac, history = history, mac = mac, \
+        active = "history")
 
 @app.route("/about/")
 @app.route("/about")
