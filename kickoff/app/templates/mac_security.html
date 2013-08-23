@@ -5,30 +5,33 @@
 <!-- {{ boot }} -->
 
 <div class="row">
+  <h2>Security</h2>
+  <p class="lead">
+    The basic security feature is to allow requests from the same IP address and with the same UUID string as in the initial boot request only. If the SMBIOS UUID or the IP address is changed during the lifecycle of the host, update the filters below.
+  </p>
   <div class="col-md-8">
-    <h2>Security for this host</h2>
     <table class="table table-bordered">
       <tr>
         {% if host.remote_addr %}
           <td class="success">
-            Only allowing requests from {{ host.remote_addr }}
+            IP filter enabled. Allow requests from {{ host.remote_addr }} only.
             {% if host['reverse'] %}
               ({{ host['reverse'] }})
             {% endif %}
             <form action="" method="POST" class="pull-right">
               <input type="hidden" name="do" value="unlock-ip-filter"/>
               <button type="submit">
-                <span rel="tooltip" title="Unlock" class="glyphicon glyphicon-remove"></span>
+                <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
               </button>
             </form>
           </td>
         {% else %}
           <td class="danger">
-            All IP addresses are allowed
+            IP filter disabled. Allow requests from all IP addresses.
             <form action="" method="POST" class="pull-right">
               <input type="hidden" name="do" value="lock-ip-filter"/>
               <button type="submit">
-                <span rel="tooltip" title="Lock" class="glyphicon glyphicon-lock"></span>
+                <span rel="tooltip" title="Lock to {{ boot['remote_addr'] }}" class="glyphicon glyphicon-lock"></span>
               </button>
             </form>
           </td>
@@ -37,32 +40,36 @@
       <tr>
         {% if host.uuid %}
           <td class="success">
-            Only allowing requests with SMBIOS UUID {{ host.uuid }} set
+            UUID filter enabled. Accept requests with SMBIOS UUID {{ host.uuid }} set.
             <form action="" method="POST" class="pull-right">
               <input type="hidden" name="do" value="unlock-uuid-filter"/>
               <button type="submit">
-                <span rel="tooltip" title="Unlock" class="glyphicon glyphicon-remove"></span>
+                <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
               </button>
             </form>
           </td>
         {% else %}
           {% if host.uuid == None %}
             <td class="success">
-              Only requests without SMBIOS UUID set are allowed
+              UUID filter enabled. Accept requests without UUID only.
               <form action="" method="POST" class="pull-right">
               <input type="hidden" name="do" value="unlock-uuid-filter"/>
                 <button type="submit">
-                  <span rel="tooltip" title="Unlock" class="glyphicon glyphicon-remove"></span>
+                  <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
                 </button>
               </form>
             </td>
           {% else %}
             <td class="danger">
-              All UUIDs are allowed
+              UUID filter disabled. Allow requests from all UUIDs.
               <form action="" method="POST" class="pull-right">
                 <input type="hidden" name="do" value="lock-uuid-filter"/>
                 <button type="submit">
-                  <span rel="tooltip" title="Lock" class="glyphicon glyphicon-lock"></span>
+                  {% if boot['uuid'] == None %}
+                    <span rel="tooltip" title="Lock to no UUID" class="glyphicon glyphicon-lock"></span>
+                  {% else %}
+                    <span rel="tooltip" title="Lock to UUID {{ boot['uuid'] }}" class="glyphicon glyphicon-lock"></span>
+                  {% endif %}
                 </button>
               </form>
             </td>
@@ -70,6 +77,14 @@
         {% endif %}
       </tr>
     </table>
+  </div>
+  <div class="col-md-4">
+    <div class="panel panel-default">
+      <div class="panel-heading">Important</div>
+      <div class="panel-body">
+        The preset values for the filter have been read from the <a href="/mac/{{ mac }}/history">latest boot request</a> to this MAC address. Please make sure that the valid host was used before locking down the configuration.
+      </div>
+    </div>
   </div>
 </div>
 
