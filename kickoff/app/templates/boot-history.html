@@ -3,6 +3,7 @@
 {% if mac %}
   {% include "mac_menu.html" %}
   <h2>Boot history</h2>
+  <p class="lead">This is the entire net boot history of the MAC address {{ mac }}.
 {% else %}
   {% if status == 1 %}
     <h1>Discovered hosts</h1>
