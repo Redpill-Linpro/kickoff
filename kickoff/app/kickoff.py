@@ -719,10 +719,16 @@ def mac_history(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    history = get_boot_history(mac)
-    return flask.render_template("mac_history.html", \
-        title = "%s history" % mac, history = history, mac = mac, \
-        active="history")
+    status = flask.request.args.get('status', False)
+    entries = get_last_boot_requests(False, mac = mac, status = status)
+
+    if mac:
+        title = "%s boot history" % mac
+    else:
+        title = "Boot history"
+
+    return flask.render_template("boot-history.html", title = title, \
+        active = "history", entries = entries, mac = mac, status = status)
 
 @app.route("/about/")
 @app.route("/about")
