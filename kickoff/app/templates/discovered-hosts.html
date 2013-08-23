@@ -1,0 +1,47 @@
+{% include "header.html" %}
+
+<h1>Discovered hosts</h1>
+<div class="row">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+       <th>Timestamp</th>
+       <th>MAC address</th>
+       <th>IP address</th>
+       <th>UUID</th>
+       <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for entry in unknown %}
+      <tr>
+      <td>{{ entry['registered'] }}</td>
+      <td><a href="/mac/{{ entry['mac'] }}">{{ entry['mac'] }}</a></td>
+      <td>{{ entry['remote_addr'] }}</td>
+      <td>
+         {% if entry['uuid'] %}
+           {{ entry['uuid'] }}
+         {% else %}
+           UUID not set
+         {% endif %}
+      </td>
+      <td>
+        {% if entry['status'] == 0 %}
+          Permission denied
+        {% elif entry['status'] == 1 %}
+          The host was discovered
+        {% elif entry['status'] == 2 %}
+          Served default configuration
+        {% elif entry['status'] == 3 %}
+          Served custom configuration
+        {% endif %}
+      </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<hr>
+
+{% include "footer.html" %}
