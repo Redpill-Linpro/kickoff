@@ -8,30 +8,11 @@
 
 {% include "mac_menu.html" %}
 
+
 <div class="row">
   <div class="col-md-6">
-    <h2>Permissions</h2>
-    <table class="table table-striped">
-      <tr>
-        <th>
-          IP address
-          {% if host['reverse'] %}
-            {{ host['reverse'] }}
-          {% endif %}
-        </th>
-        <td>{{ host.remote_addr }}</td>
-      </tr>
-      <tr>
-        <th>UUID</th>
-        <td>
-          {% if host.uuid %}
-            {{ host.uuid }}
-          {% else %}
-            Not set
-          {% endif %}
-        </td>
-      </tr>
-    </table>
+    <h2>Configuration</h2>
+    {{ host }}
   </div>
 </div>
 

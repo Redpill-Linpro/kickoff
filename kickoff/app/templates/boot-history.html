@@ -3,8 +3,13 @@
 {% if mac %}
   <h1>{{ mac }}</h1>
   {% include "mac_menu.html" %}
+  <h2>Boot history</h2>
 {% else %}
-  <h1>Boot history</h1>
+  {% if status == 1 %}
+    <h1>Discovered hosts</h1>
+  {% else %}
+    <h1>Boot history</h1>
+  {% endif %}
 {% endif %}
 
 <div class="row">
@@ -52,26 +57,32 @@
            {% endif %}
         </td>
         <td>
-          {% if i.status == 0 %}
-            <span class="glyphicon glyphicon-ban-circle"></span>
-            <small>Permission denied</small>
-          {% elif i.status == 1 %}
-            <span class="glyphicon glyphicon-star"></span>
-            <small>The host was discovered</small>
-          {% elif i.status == 2 %}
-            <span class="glyphicon glyphicon-hdd"></span>
-            <small>Served default configuration</small>
-          {% elif i.status == 3 %}
-            <span class="glyphicon glyphicon-cloud-download"></span>
-            <small>Served custom configuration</small>
+          {% if i.status == 0 %}
+            <span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied"></span>
+          {% elif i.status == 1 %}
+            <span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span>
+          {% elif i.status == 2 %}
+            <span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span>
+          {% elif i.status == 3 %}
+            <span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span>
           {% endif %}
+        </td>
+        <td>
+          <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#{{ i.id }}">
+            <small>Configuration</small>
+          </a>
+          <div id="{{ i.id }}" class="panel-collapse collapse">
+            <div class="panel-body">
+              <pre>
+                {{ i.ipxe }}
+              </pre>
+            </div>
+          </div>
         </td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
 </div>
-
-<hr>
 
 {% include "footer.html" %}

@@ -1,0 +1,79 @@
+{% include "header.html" %}
+
+{% if host['reverse'] %}
+  <h1>{{ host['reverse'] }}</h1>
+{% else %}
+  <h1>{{ mac }}</h1>
+{% endif %}
+
+{% include "mac_menu.html" %}
+
+<!-- {{ boot }} -->
+
+<div class="row">
+  <div class="col-md-6">
+    <h2>Security</h2>
+    <table class="table table-bordered">
+      <tr>
+        {% if host.remote_addr %}
+          <td class="success">
+            Only requests from the IP address {{ host.remote_addr }} are allowed
+            {% if host['reverse'] %}
+              ({{ host['reverse'] }})
+            {% endif %}
+            <form action="" method="POST" class="pull-right">
+              <button type="submit">
+                <span class="glyphicon glyphicon-remove"></span>
+              </button>
+            </form>
+          </td>
+        {% else %}
+          <td class="danger">
+            All IP addresses are allowed
+            <form action="" method="POST" class="pull-right">
+              <button type="submit">
+                <span class="glyphicon glyphicon-lock"></span>
+              </button>
+            </form>
+          </td>
+        {% endif %}
+      </tr>
+      <tr>
+        {% if host.uuid %}
+          <td class="success">
+            Only requests with SMBIOS UUID {{ host.uuid }} are allowed
+            <form action="" method="POST" class="pull-right">
+              <button type="submit">
+                <span class="glyphicon glyphicon-remove"></span>
+              </button>
+            </form>
+          </td>
+        {% else %}
+          {% if host.uuid == None %}
+            <td class="success">
+              Only requests without SMBIOS UUID set are allowed
+              <form action="" method="POST" class="pull-right">
+                <button type="submit">
+                  <span class="glyphicon glyphicon-remove"></span>
+                </button>
+              </form>
+            </td>
+          {% else %}
+            <td class="danger">
+              All UUIDs are allowed
+              <form action="" method="POST" class="pull-right">
+                <button type="submit">
+                  <span class="glyphicon glyphicon-lock"></span>
+                </button>
+              </form>
+            </td>
+          {% endif %}
+        {% endif %}
+      </tr>
+    </table>
+  </div>
+</div>
+
+<hr/>
+
+<p>Configuration saved at {{ host['registered'] }}.</p>

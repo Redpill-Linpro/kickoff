@@ -5,6 +5,7 @@ import re
 import cgi
 import flask
 import datetime
+import hashlib
 import json
 #import socket
 #import syslog
@@ -126,6 +127,7 @@ def save_state(mac, data = {}):
 
     data['registered'] = now.strftime("%Y-%m-%d %H:%M:%S")
     data['mac'] = mac
+    data['id'] = hashlib.sha1(ts + mac).hexdigest()
     data['ts'] = int(ts)
 
     filepath = '%s/%s.json' % (path, ts)
@@ -689,6 +691,9 @@ def index():
 @app.route("/boot-history")
 def boot_history():
     status = flask.request.args.get('status', False)
+    if status:
+        status = int(status)
+
     mac = flask.request.args.get('mac', False)
     entries = get_last_boot_requests(False, mac = mac, status = status)
 
@@ -700,9 +705,32 @@ def boot_history():
 def mac(mac):
     return flask.redirect('/mac/%s/history' % mac)
 
+@app.route("/mac/<mac>/security")
+def mac_security(mac):
+    mac = clean_mac(mac)
+    i = get_last_boot_requests(1, mac = mac)
+    boot = False
+    if len(i) == 1:
+        boot = i[0]
+    
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    host = get_host_configuration(mac)
+    host['reverse'] = get_reverse_address(host['remote_addr'])
+
+    return flask.render_template("mac_security.html", \
+        title = "%s security" % mac, mac = mac, \
+        active = "security", host = host, boot = boot)
+
 @app.route("/mac/<mac>/configuration")
 def mac_configuration(mac):
     mac = clean_mac(mac)
+    i = get_last_boot_requests(1, mac = mac)
+    boot = False
+    if len(i) == 1:
+        boot = i[0]
+    
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
@@ -711,7 +739,7 @@ def mac_configuration(mac):
 
     return flask.render_template("mac_configuration.html", \
         title = "%s configuration" % mac, mac = mac, \
-        active = "configuration", host = host)
+        active = "configuration", host = host, boot = boot)
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
@@ -745,10 +773,10 @@ def bootstrap(mac):
         return flask.make_response("The given mac address is not valid", 400, h)
 
     # Store the UUID if sent by the client
-    uuid = flask.request.args.get('uuid', False)
+    uuid = flask.request.args.get('uuid', None)
 
     # Read the source IP address of the request
-    remote_addr = flask.request.environ.get('REMOTE_ADDR', False)
+    remote_addr = flask.request.environ.get('REMOTE_ADDR', None)
 
     # Get host configuration
     host = get_host_configuration(mac, uuid, remote_addr)
