@@ -30,13 +30,13 @@
           </td>
           <td>
             {% if i.status == 0 %}
-              <span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span>
+              <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
             {% elif i.status == 1 %}
-              <span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span></a>
             {% elif i.status == 2 %}
-              <span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
             {% elif i.status == 3 %}
-              <span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span></a>
             {% endif %}
           </td>
         </tr>
@@ -70,13 +70,13 @@
           </td>
           <td>
             {% if i.status == 0 %}
-              <span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span>
+              <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
             {% elif i.status == 1 %}
-              <span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span></a>
             {% elif i.status == 2 %}
-              <span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
             {% elif i.status == 3 %}
-              <span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span></a>
             {% endif %}
           </td>
         </tr>

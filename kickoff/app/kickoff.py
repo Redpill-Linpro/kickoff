@@ -514,7 +514,7 @@ def get_data(path, ts = False):
     return False
 
 # Let's see if this host with mac, uuid and remote_addr is allowed to get configuration
-def get_permission(host, mac, uuid, remote_addr):
+def get_permission(host, mac, uuid, remote_addr, hostname):
     if 'mac' in host:
         if mac != host['mac']:
             return False
@@ -527,9 +527,13 @@ def get_permission(host, mac, uuid, remote_addr):
         if remote_addr != host['remote_addr']:
             return False
 
+    if 'hostname' in host:
+        if hostname != host['hostname']:
+            return False
+
     return True
 
-def get_host_configuration(mac, uuid = False, remote_addr = False):
+def get_host_configuration(mac, uuid = False, remote_addr = False, hostname = False):
     data = {}
     path = app.config['HOST_DIR'] + '/' + mac
 
@@ -542,6 +546,8 @@ def get_host_configuration(mac, uuid = False, remote_addr = False):
         data['mac'] = mac
         data['uuid'] = uuid
         data['remote_addr'] = remote_addr
+        if hostname:
+            data['hostname'] = hostname
 
         now = datetime.datetime.now()
         ts = dt_to_timestamp(now)
@@ -728,10 +734,14 @@ def mac_security(mac):
                 del(host['remote_addr'])
             elif do == "unlock-uuid-filter":
                 del(host['uuid'])
+            elif do == "unlock-hostname-filter":
+                del(host['hostname'])
             if do == "lock-ip-filter":
                 host['remote_addr'] = boot['remote_addr']
             elif do == "lock-uuid-filter":
                 host['uuid'] = boot['uuid']
+            elif do == "lock-hostname-filter":
+                host['hostname'] = boot['hostname']
 
             save_host(mac, host)
 
@@ -790,15 +800,16 @@ def bootstrap(mac):
 
     # Store the UUID if sent by the client
     uuid = flask.request.args.get('uuid', None)
+    hostname = flask.request.args.get('hostname', None)
 
     # Read the source IP address of the request
     remote_addr = flask.request.environ.get('REMOTE_ADDR', None)
 
     # Get host configuration
-    host = get_host_configuration(mac, uuid, remote_addr)
+    host = get_host_configuration(mac, uuid, remote_addr, hostname)
 
     # Let's see if this host with mac, uuid and remote_addr is allowed to get configuration
-    permission = get_permission(host, mac, uuid, remote_addr)
+    permission = get_permission(host, mac, uuid, remote_addr, hostname)
 
     # If permission is granted, get configuration:
     (status, ipxe) = get_ipxe_configuration(mac, permission, host)
@@ -808,6 +819,7 @@ def bootstrap(mac):
     data['uuid']        = uuid
     data['remote_addr'] = remote_addr
     data['status']      = status
+    data['hostname']    = hostname
 
     reverse = get_reverse_address(remote_addr)
     if reverse:

@@ -22,8 +22,9 @@
          <th>MAC</th>
        {% endif %}
        <th>IP</th>
-       <th>DNS</th>
+       <th>Hostname</th>
        <th>UUID</th>
+       <th>DNS</th>
        <th></th>
       </tr>
     </thead>
@@ -37,6 +38,20 @@
         {% endif %}
         <td>{{ i.remote_addr }}</td>
         <td>
+          {% if i.hostname %}
+            {{ i.hostname }}
+          {% else %}
+            <small>N/A</small>
+          {% endif %}
+        </td>
+        <td>
+           {% if i.uuid %}
+             {{ i.uuid }}
+           {% else %}
+             <small>N/A</small>
+           {% endif %}
+        </td>
+        <td>
               {% if i.reverse %}
                 {% if mac %}
                   {{ i.reverse }}
@@ -48,13 +63,6 @@
               {% else %}
                 <span class="label label-info">Lookup failed</span>
               {% endif %}
-        </td>
-        <td>
-           {% if i.uuid %}
-             {{ i.uuid }}
-           {% else %}
-             UUID not set
-           {% endif %}
         </td>
         <td>
           {% if i.status == 0 %}

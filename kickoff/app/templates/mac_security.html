@@ -38,9 +38,48 @@
         {% endif %}
       </tr>
       <tr>
+        {% if host.hostname %}
+          <td class="success">
+            Hostname filter enabled. Accept requests with hostname {{ host.hostname }}.
+            <form action="" method="POST" class="pull-right">
+              <input type="hidden" name="do" value="unlock-hostname-filter"/>
+              <button type="submit">
+                <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
+              </button>
+            </form>
+          </td>
+        {% else %}
+          {% if host.hostname == None %}
+            <td class="success">
+              Hostname filter enabled. Accept requests without hostname.
+              <form action="" method="POST" class="pull-right">
+              <input type="hidden" name="do" value="unlock-hostname-filter"/>
+                <button type="submit">
+                  <span rel="tooltip" title="Unlock filter" class="glyphicon glyphicon-remove"></span>
+                </button>
+              </form>
+            </td>
+          {% else %}
+            <td class="danger">
+              Hostname filter disabled. Allow requests from all hostnames.
+              <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="lock-hostname-filter"/>
+                <button type="submit">
+                  {% if boot['hostname'] == None %}
+                    <span rel="tooltip" title="Lock to no hostname" class="glyphicon glyphicon-lock"></span>
+                  {% else %}
+                    <span rel="tooltip" title="Lock to hostname {{ boot['hostname'] }}" class="glyphicon glyphicon-lock"></span>
+                  {% endif %}
+                </button>
+              </form>
+            </td>
+          {% endif %}
+        {% endif %}
+      </tr>
+      <tr>
         {% if host.uuid %}
           <td class="success">
-            UUID filter enabled. Accept requests with SMBIOS UUID {{ host.uuid }} set.
+            UUID filter enabled. Accept requests with SMBIOS UUID {{ host.uuid }}.
             <form action="" method="POST" class="pull-right">
               <input type="hidden" name="do" value="unlock-uuid-filter"/>
               <button type="submit">
