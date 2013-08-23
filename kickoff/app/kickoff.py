@@ -599,9 +599,14 @@ def get_boot_history(mac):
 
     return history
 
-def get_last_boot_requests(count, status = False):
-    macs = get_all_mac_addresses()
+def get_last_boot_requests(count, mac = False, status = False):
     entries = []
+    macs = []
+    if mac:
+        macs.append(mac)
+    else:
+        macs = get_all_mac_addresses()
+
     for mac in macs:
         history = get_boot_history(mac)
         for i in history:
@@ -610,7 +615,7 @@ def get_last_boot_requests(count, status = False):
             if status == False:
                 entries.append(i)
             else:
-                if i['status'] == status:
+                if i['status'] == int(status):
                     entries.append(i)
 
     ret = sorted(entries, key=lambda k: (-k['ts']))
@@ -626,11 +631,14 @@ def index():
     unknown = get_last_boot_requests(5, status = 1)
     return flask.render_template("index.html", title = "Overview", unknown = unknown)
 
-@app.route("/discovered-hosts/")
-@app.route("/discovered-hosts")
-def discovered_hosts():
-    unknown = get_last_boot_requests(False, status = 1)
-    return flask.render_template("discovered-hosts.html", title = "Discovered hosts", unknown = unknown)
+@app.route("/boot-history/")
+@app.route("/boot-history")
+def boot_history():
+    status = flask.request.args.get('status', False)
+    mac = flask.request.args.get('mac', False)
+    entries = get_last_boot_requests(False, mac = mac, status = status)
+
+    return flask.render_template("boot-history.html", title = "Boot history", entries = entries, mac = mac, status = status)
 
 @app.route("/mac/<mac>")
 def mac(mac):
