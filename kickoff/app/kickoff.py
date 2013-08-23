@@ -424,7 +424,7 @@ def clean_mac(mac):
     
     return mac
 
-def get_ipxe_configuration(mac, permission):
+def get_ipxe_configuration(mac, permission, host):
     ipxe = False
     path = False
 
@@ -435,16 +435,19 @@ def get_ipxe_configuration(mac, permission):
     else:
         # Check if the directory of this mac address exists to see if we have seen
         # this host before or not.
-        d = app.config['STATE_DIR'] + '/' + mac
+        d = app.config['HOST_DIR'] + '/' + mac
         if os.path.isdir(d):
             # Known host
             # Look for configuration, if none is found:
-            path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
+            if 'ipxe' in host:
+                ipxe = host['ipxe']
+            else:
+                path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
         else:
             # Unknown host
             path = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
 
-    if path:
+    if not ipxe and path:
         if os.path.exists(path):
             try:
                 f = open(path, 'r')
@@ -580,7 +583,7 @@ def bootstrap(mac):
     permission = get_permission(host, mac, uuid, remote_addr)
 
     # If permission is granted, get configuration:
-    ipxe = get_ipxe_configuration(mac, permission)
+    ipxe = get_ipxe_configuration(mac, permission, host)
 
     data = {}
     data['ipxe']        = ipxe
