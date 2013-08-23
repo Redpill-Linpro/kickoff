@@ -1,11 +1,5 @@
 {% include "header.html" %}
 
-{% if host['reverse'] %}
-  <h1>{{ host['reverse'] }}</h1>
-{% else %}
-  <h1>{{ mac }}</h1>
-{% endif %}
-
 {% include "mac_menu.html" %}
 
 
@@ -16,6 +10,8 @@
   </div>
 </div>
 
+<!--
 <hr/>
 
 <p>Configuration saved at {{ host['registered'] }}.</p>
+-->

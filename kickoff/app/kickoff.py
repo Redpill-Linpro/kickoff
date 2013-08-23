@@ -657,7 +657,10 @@ def get_last_boot_requests(count, mac = False, status = False):
     ret = sorted(entries, key=lambda k: (-k['ts']))
  
     if count:
-        return ret[0:count]
+        if count == 1:
+            return ret[0]
+        else:
+            return ret[0:count]
     else:
         return ret
 
@@ -708,14 +711,11 @@ def mac(mac):
 @app.route("/mac/<mac>/security")
 def mac_security(mac):
     mac = clean_mac(mac)
-    i = get_last_boot_requests(1, mac = mac)
-    boot = False
-    if len(i) == 1:
-        boot = i[0]
     
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
+    boot = get_last_boot_requests(1, mac = mac)
     host = get_host_configuration(mac)
     host['reverse'] = get_reverse_address(host['remote_addr'])
 
@@ -726,14 +726,11 @@ def mac_security(mac):
 @app.route("/mac/<mac>/configuration")
 def mac_configuration(mac):
     mac = clean_mac(mac)
-    i = get_last_boot_requests(1, mac = mac)
-    boot = False
-    if len(i) == 1:
-        boot = i[0]
-    
+
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
+    boot = get_last_boot_requests(1, mac = mac)
     host = get_host_configuration(mac)
     host['reverse'] = get_reverse_address(host['remote_addr'])
 
@@ -747,6 +744,7 @@ def mac_history(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
+    boot = get_last_boot_requests(1, mac = mac)
     status = flask.request.args.get('status', False)
     entries = get_last_boot_requests(False, mac = mac, status = status)
 
@@ -756,7 +754,8 @@ def mac_history(mac):
         title = "Boot history"
 
     return flask.render_template("boot-history.html", title = title, \
-        active = "history", entries = entries, mac = mac, status = status)
+        active = "history", entries = entries, mac = mac, status = status, \
+        boot = boot)
 
 @app.route("/about/")
 @app.route("/about")

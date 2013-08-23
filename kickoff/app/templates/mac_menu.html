@@ -1,5 +1,11 @@
+{% if boot['reverse'] %}
+  <h1>{{ boot['reverse'] }}</h1>
+  <small>{{ mac }}</small>
+{% else %}
+  <h1>{{ mac }}</h1>
+{% endif %}
 <ul class="nav nav-tabs">
-  <li {% if active=="history" %}class="active"{%endif%}><a href="/boot-history/?mac={{ mac }}">Boot history</a></li>
+  <li {% if active=="history" %}class="active"{%endif%}><a href="/mac/{{ mac }}/history">Boot history</a></li>
   <li {% if active=="configuration" %}class="active"{%endif%}><a href="/mac/{{ mac }}/configuration">Configuration</a></li>
   <li {% if active=="security" %}class="active"{%endif%}><a href="/mac/{{ mac }}/security">Security</a></li>
 </ul>

@@ -1,11 +1,5 @@
 {% include "header.html" %}
 
-{% if host['reverse'] %}
-  <h1>{{ host['reverse'] }}</h1>
-{% else %}
-  <h1>{{ mac }}</h1>
-{% endif %}
-
 {% include "mac_menu.html" %}
 
 <!-- {{ boot }} -->
@@ -17,7 +11,7 @@
       <tr>
         {% if host.remote_addr %}
           <td class="success">
-            Only requests from the IP address {{ host.remote_addr }} are allowed
+            Only allowing requests from {{ host.remote_addr }}
             {% if host['reverse'] %}
               ({{ host['reverse'] }})
             {% endif %}
@@ -41,7 +35,7 @@
       <tr>
         {% if host.uuid %}
           <td class="success">
-            Only requests with SMBIOS UUID {{ host.uuid }} are allowed
+            Only allowing requests with SMBIOS UUID {{ host.uuid }} set
             <form action="" method="POST" class="pull-right">
               <button type="submit">
                 <span class="glyphicon glyphicon-remove"></span>
@@ -74,6 +68,8 @@
   </div>
 </div>
 
+<!--
 <hr/>
 
 <p>Configuration saved at {{ host['registered'] }}.</p>
+-->

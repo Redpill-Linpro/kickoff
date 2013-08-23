@@ -1,9 +1,7 @@
 {% include "header.html" %}
 
 {% if mac %}
-  <h1>{{ mac }}</h1>
   {% include "mac_menu.html" %}
-  <h2>Boot history</h2>
 {% else %}
   {% if status == 1 %}
     <h1>Discovered hosts</h1>
