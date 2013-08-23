@@ -546,8 +546,7 @@ def get_host_configuration(mac, uuid = False, remote_addr = False, hostname = Fa
         data['mac'] = mac
         data['uuid'] = uuid
         data['remote_addr'] = remote_addr
-        if hostname:
-            data['hostname'] = hostname
+        data['hostname'] = hostname
 
         now = datetime.datetime.now()
         ts = dt_to_timestamp(now)
@@ -643,7 +642,7 @@ def get_boot_history(mac):
 
     return history
 
-def get_last_boot_requests(count, mac = False, status = False):
+def get_last_boot_requests(count = False, mac = False, status = False):
     entries = []
     macs = []
     if mac:
@@ -787,8 +786,10 @@ def mac_history(mac):
 @app.route("/about/")
 @app.route("/about")
 def about():
+    macs = get_all_mac_addresses()
+    boots = get_last_boot_requests()
     return flask.render_template("about.html", title = "About", \
-       active = "about")
+       active = "about", macs = macs, boots = boots)
 
 @app.route("/bootstrap/mac-<mac>.ipxe")
 def bootstrap(mac):
