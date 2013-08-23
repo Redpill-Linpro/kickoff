@@ -708,7 +708,7 @@ def boot_history():
 def mac(mac):
     return flask.redirect('/mac/%s/history' % mac)
 
-@app.route("/mac/<mac>/security")
+@app.route("/mac/<mac>/security", methods = ['GET', 'POST'])
 def mac_security(mac):
     mac = clean_mac(mac)
     
@@ -716,8 +716,26 @@ def mac_security(mac):
         return flask.make_response("The given mac address is not valid", 400)
 
     boot = get_last_boot_requests(1, mac = mac)
+
+    if flask.request.method == 'POST':
+        try:
+            do = flask.request.form['do']
+        except:
+            pass
+        else:
+            host = get_host_configuration(mac)
+            if do == "unlock-ip-filter":
+                del(host['remote_addr'])
+            elif do == "unlock-uuid-filter":
+                del(host['uuid'])
+            if do == "lock-ip-filter":
+                host['remote_addr'] = boot['remote_addr']
+            elif do == "lock-uuid-filter":
+                host['uuid'] = boot['uuid']
+
+            save_host(mac, host)
+
     host = get_host_configuration(mac)
-    host['reverse'] = get_reverse_address(host['remote_addr'])
 
     return flask.render_template("mac_security.html", \
         title = "%s security" % mac, mac = mac, \
@@ -732,7 +750,6 @@ def mac_configuration(mac):
 
     boot = get_last_boot_requests(1, mac = mac)
     host = get_host_configuration(mac)
-    host['reverse'] = get_reverse_address(host['remote_addr'])
 
     return flask.render_template("mac_configuration.html", \
         title = "%s configuration" % mac, mac = mac, \

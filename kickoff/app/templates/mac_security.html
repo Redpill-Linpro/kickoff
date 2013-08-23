@@ -5,8 +5,8 @@
 <!-- {{ boot }} -->
 
 <div class="row">
-  <div class="col-md-6">
-    <h2>Security</h2>
+  <div class="col-md-8">
+    <h2>Security for this host</h2>
     <table class="table table-bordered">
       <tr>
         {% if host.remote_addr %}
@@ -16,8 +16,9 @@
               ({{ host['reverse'] }})
             {% endif %}
             <form action="" method="POST" class="pull-right">
+              <input type="hidden" name="do" value="unlock-ip-filter"/>
               <button type="submit">
-                <span class="glyphicon glyphicon-remove"></span>
+                <span rel="tooltip" title="Unlock" class="glyphicon glyphicon-remove"></span>
               </button>
             </form>
           </td>
@@ -25,8 +26,9 @@
           <td class="danger">
             All IP addresses are allowed
             <form action="" method="POST" class="pull-right">
+              <input type="hidden" name="do" value="lock-ip-filter"/>
               <button type="submit">
-                <span class="glyphicon glyphicon-lock"></span>
+                <span rel="tooltip" title="Lock" class="glyphicon glyphicon-lock"></span>
               </button>
             </form>
           </td>
@@ -37,8 +39,9 @@
           <td class="success">
             Only allowing requests with SMBIOS UUID {{ host.uuid }} set
             <form action="" method="POST" class="pull-right">
+              <input type="hidden" name="do" value="unlock-uuid-filter"/>
               <button type="submit">
-                <span class="glyphicon glyphicon-remove"></span>
+                <span rel="tooltip" title="Unlock" class="glyphicon glyphicon-remove"></span>
               </button>
             </form>
           </td>
@@ -47,8 +50,9 @@
             <td class="success">
               Only requests without SMBIOS UUID set are allowed
               <form action="" method="POST" class="pull-right">
+              <input type="hidden" name="do" value="unlock-uuid-filter"/>
                 <button type="submit">
-                  <span class="glyphicon glyphicon-remove"></span>
+                  <span rel="tooltip" title="Unlock" class="glyphicon glyphicon-remove"></span>
                 </button>
               </form>
             </td>
@@ -56,8 +60,9 @@
             <td class="danger">
               All UUIDs are allowed
               <form action="" method="POST" class="pull-right">
+                <input type="hidden" name="do" value="lock-uuid-filter"/>
                 <button type="submit">
-                  <span class="glyphicon glyphicon-lock"></span>
+                  <span rel="tooltip" title="Lock" class="glyphicon glyphicon-lock"></span>
                 </button>
               </form>
             </td>
