@@ -2,7 +2,7 @@ server {
     listen   80;
     listen   [::]:80 default ipv6only=on;
     
-    root /srv/www/kickoff;
+    root /srv/www/kickoff/app;
     index index.html index.htm;
     
     server_name localhost;

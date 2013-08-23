@@ -558,9 +558,51 @@ def get_host_configuration(mac, uuid, remote_addr):
 
     return data
 
+def get_revisions(path):
+    f = re.compile("^(\d+)\.json$")
+    revisions = []
+    if os.path.isdir(path):
+        for i in os.listdir(path):
+            filepath = path + "/" + i
+            m = f.match(i)
+            if os.path.isfile(filepath) and m:
+                ts = int(m.group(1))
+                revisions.append(ts)
+    revisions.sort()
+    revisions.reverse()
+    return revisions
+        
+def get_all_mac_addresses():
+    path = app.config['STATE_DIR']
+    macs = []
+    for mac in os.listdir(path):
+        p = path + "/" + mac
+        if os.path.isdir(p):
+            macs.append(mac)
+    return macs
+
+def get_boot_history(mac):
+    history = []
+    path = app.config['STATE_DIR'] + '/' + mac
+    revisions = get_revisions(path)
+    for ts in revisions:
+        data = get_data(path, ts=ts)
+        history.append(data)
+
+    return history
+
 @app.route("/")
 def index():
     return flask.render_template("index.html", title = "Overview")
+
+@app.route("/mac/<mac>")
+def mac(mac):
+    mac = clean_mac(mac)
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    history = get_boot_history(mac)
+    return flask.render_template("mac.html", title = mac, history = history)
 
 @app.route("/about/")
 @app.route("/about")
