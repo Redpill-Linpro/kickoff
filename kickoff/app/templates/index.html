@@ -12,6 +12,7 @@
         <th>Age</th>
         <th>MAC</th>
         <th>DNS</th>
+        <th></th>
       </thead>
       <tbody>
       {% for i in known %}
@@ -20,7 +21,9 @@
           <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
           <td>
             {% if i.reverse %}
-              {{ i.reverse }}
+              <a href="/mac/{{ i.mac }}">
+                {{ i.reverse }}
+              </a>
             {% else %}
               <span class="label label-info">Lookup failed</span>
             {% endif %}
@@ -49,6 +52,7 @@
         <th>Age</th>
         <th>MAC</th>
         <th>DNS</th>
+        <th></th>
       </thead>
       <tbody>
       {% for i in unknown %}
@@ -57,7 +61,9 @@
           <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
           <td>
             {% if i.reverse %}
-              {{ i.reverse }}
+              <a href="/mac/{{ i.mac }}">
+                {{ i.reverse }}
+              </a>
             {% else %}
               <span class="label label-info">Lookup failed</span>
             {% endif %}

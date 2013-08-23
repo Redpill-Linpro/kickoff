@@ -33,7 +33,13 @@
         <td>{{ i.remote_addr }}</td>
         <td>
               {% if i.reverse %}
-                {{ i.reverse }}
+                {% if mac %}
+                  {{ i.reverse }}
+                {% else %}
+                  <a href="/mac/{{ i.mac }}">
+                    {{ i.reverse }}
+                  </a>
+                {% endif %}
               {% else %}
                 <span class="label label-info">Lookup failed</span>
               {% endif %}
