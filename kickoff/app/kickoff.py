@@ -484,7 +484,7 @@ def bootstrap(mac):
         return flask.make_response("The given mac address is not valid", 400, h)
 
     try:
-        data['remote_addr'] = flask.request.headers.get('remote_addr')
+        data['remote_addr'] = flask.request.environ['REMOTE_ADDR']
 
     except:
         pass
