@@ -1,0 +1,13 @@
+#!ipxe
+# 
+# The request was denied. You do not have permission to access this configuration.
+#
+
+echo 
+echo The boot request was denied. 
+echo You do not have permission to access this configuration. Please ensure that the IP address 
+echo (${net0/ip}) and UUID (${uuid}) match the access filter for this MAC address (${net0/mac}).
+echo 
+
+exit
+

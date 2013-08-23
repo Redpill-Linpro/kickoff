@@ -424,14 +424,25 @@ def clean_mac(mac):
     
     return mac
 
-def get_default_ipxe_configuration(known_host):
-    path = False
+def get_ipxe_configuration(mac, permission):
     ipxe = False
+    path = False
 
-    if known_host:
-       path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
+    # If not permission, serve some exit-message
+    if not permission:
+        path = app.config['DEFAULT_NO_PERMISSION_IPXE_CONFIGURATION']
+
     else:
-       path = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
+        # Check if the directory of this mac address exists to see if we have seen
+        # this host before or not.
+        d = app.config['STATE_DIR'] + '/' + mac
+        if os.path.isdir(d):
+            # Known host
+            # Look for configuration, if none is found:
+            path = app.config['DEFAULT_KNOWN_HOST_IPXE_CONFIGURATION']
+        else:
+            # Unknown host
+            path = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
 
     if path:
         if os.path.exists(path):
@@ -446,22 +457,98 @@ def get_default_ipxe_configuration(known_host):
                 f.close()
 
     return ipxe
-            
 
-def get_ipxe_configuration(mac):
-    ipxe = False
+def get_data(path, ts = False):
+    if not os.path.isdir(path):
+        return False
 
-    # Check if the directory of this mac address exists to see if we have seen
-    # this host before or not.
-    path = app.config['STATE_DIR'] + '/' + mac
+    f = re.compile("^(\d+)\.json$")
+
+    if not ts:
+        ts = 0
+        for entry in os.listdir(path):
+            i = path + '/' + entry
+            m = f.match(entry)
+            if os.path.isfile(i) and m:
+                this_ts = int(m.group(1))
+                if this_ts > ts:
+                    ts = this_ts
+
+    filepath = path + '/' + str(ts) + '.json'
+    if not os.path.isfile(filepath):
+        print "File %s does not exist" % filepath
+        return False
+
+    try:
+        f = open(filepath,'r')
+    except:
+        print "Unable to open file %s for reading" % filepath
+    else:
+         try:
+             content = json.loads(f.read())
+
+         except:
+             print "Unable to read and/or decode content in %s" % filepath
+
+         else:
+             return content
+
+    return False
+
+# Let's see if this host with mac, uuid and remote_addr is allowed to get configuration
+def get_permission(host, mac, uuid, remote_addr):
+    if 'mac' in host:
+        if mac != host['mac']:
+            return False
+
+    if 'uuid' in host:
+        if uuid != host['uuid']:
+            return False
+
+    if 'remote_addr' in host:
+        if remote_addr != host['remote_addr']:
+            return False
+
+    return True
+
+def get_host_configuration(mac, uuid, remote_addr):
+    data = {}
+    path = app.config['HOST_DIR'] + '/' + mac
+
     if os.path.isdir(path):
         # Known host
-        ipxe = get_default_ipxe_configuration(known_host = True)
-    else:
-        # Unknown host
-        ipxe = get_default_ipxe_configuration(known_host = False)
+        data = get_data(path)
 
-    return ipxe
+    else:
+        # Unknown host, create a default here with lockdown
+        data['mac'] = mac
+        data['uuid'] = uuid
+        data['remote_addr'] = remote_addr
+
+        now = datetime.datetime.now()
+        ts = timestamp(now)
+
+        data['registered'] = now.strftime("%Y-%m-%d %H:%M:%S")
+        if not os.path.exists(path):
+            os.makedirs(path,0700)
+
+        status = False
+        filepath = '%s/%s.json' % (path, ts)
+        content = json.dumps(data, indent=4, sort_keys=True)
+
+        try:
+            f = open(filepath,'w+')
+            f.write(content)
+            f.close()
+
+        except:
+            print "Unable to write host file (%s)." % (filepath)
+
+        else:
+            status = True
+            print "Host file written (%s)." % (filepath)
+
+    return data
 
 @app.route("/")
 def index():
@@ -475,28 +562,30 @@ def about():
 @app.route("/bootstrap/mac-<mac>.ipxe")
 def bootstrap(mac):
     mac = clean_mac(mac)
-    data = {}
-    ipxe = False
-
     h = {'content-type' : 'text/plain'}
 
     if not mac:
         return flask.make_response("The given mac address is not valid", 400, h)
 
-    try:
-        data['remote_addr'] = flask.request.environ['REMOTE_ADDR']
+    # Store the UUID if sent by the client
+    uuid = flask.request.args.get('uuid', False)
 
-    except:
-        pass
+    # Read the source IP address of the request
+    remote_addr = flask.request.environ.get('REMOTE_ADDR', False)
 
     # Get host configuration
+    host = get_host_configuration(mac, uuid, remote_addr)
 
-    # Check permissions
-    # If permission is not granted, print error message and exit:
+    # Let's see if this host with mac, uuid and remote_addr is allowed to get configuration
+    permission = get_permission(host, mac, uuid, remote_addr)
 
     # If permission is granted, get configuration:
-    ipxe = get_ipxe_configuration(mac)
-    data['ipxe'] = ipxe
+    ipxe = get_ipxe_configuration(mac, permission)
+
+    data = {}
+    data['ipxe']        = ipxe
+    data['uuid']        = uuid
+    data['remote_addr'] = remote_addr
 
     if not save_state(mac, data):
         print "Unable to write state for MAC " + mac
