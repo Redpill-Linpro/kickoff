@@ -595,14 +595,15 @@ def get_boot_history(mac):
 def index():
     return flask.render_template("index.html", title = "Overview")
 
-@app.route("/mac/<mac>")
-def mac(mac):
+@app.route("/mac/<mac>/history")
+def mac_history(mac):
     mac = clean_mac(mac)
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
     history = get_boot_history(mac)
-    return flask.render_template("mac.html", title = mac, history = history)
+    return flask.render_template("mac_history.html", title = mac, \
+        history = history, mac = mac)
 
 @app.route("/about/")
 @app.route("/about")

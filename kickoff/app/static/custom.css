@@ -1,7 +1,5 @@
 h1 {
-  margin-top: 5em;
-  padding-top: 5em;
-  color: red;
+  margin-top: 2em;
 }
 
 /* Main marketing message and sign up button */
@@ -11,6 +9,7 @@ h1 {
 }
 .jumbotron h1 {
   font-size: 100px;
+  margin-top: 0;
   line-height: 1;
 }
 .jumbotron .lead {
