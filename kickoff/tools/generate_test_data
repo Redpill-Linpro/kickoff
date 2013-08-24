@@ -2,10 +2,9 @@
 
 host="192.168.50.4"
 
-for i in `seq 0 100`; do
-    mac=$(echo -n 00-60-2F; dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 "-%02X"')
+for i in `seq 0 10000`; do
+    mac=$(echo -n 00-60-2F-de-12; dd bs=1 count=1 if=/dev/random 2>/dev/null |hexdump -v -e '/1 "-%02X"')
     #sleep $[ ( $RANDOM % 10 )  + 1 ]s
-    sleep 0.3
     echo $mac
     curl -I http://$host/bootstrap/mac-${mac}.ipxe
 done

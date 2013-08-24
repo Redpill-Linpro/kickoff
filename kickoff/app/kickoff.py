@@ -629,20 +629,32 @@ def humanize_date_difference(now, otherdate=None, offset=None):
     else:
         return "%ds" % delta_s
 
-def get_boot_history(mac):
+def get_boot_history(mac, count = False, status = False):
     history = []
     path = app.config['STATE_DIR'] + '/' + mac
     revisions = get_revisions(path)
     now = datetime.datetime.now()
+    counter = 0
     for ts in revisions:
         data = get_data(path, ts=ts)
         dt = timestamp_to_dt(ts)
         data['age'] = humanize_date_difference(dt,now)
         history.append(data)
+        if count:
+             if status:
+                 if data['status'] == status:
+                     counter += 1
+             else:
+                 counter += 1
+
+             if counter >= count:
+                  # Abort here as the number of return values are sufficient
+                  # anyway
+                  break
 
     return history
 
-def get_last_boot_requests(count = False, mac = False, status = False):
+def get_last_boot_requests(count = False, first = False, mac = False, status = False):
     entries = []
     macs = []
     if mac:
@@ -651,7 +663,7 @@ def get_last_boot_requests(count = False, mac = False, status = False):
         macs = get_all_mac_addresses()
 
     for mac in macs:
-        history = get_boot_history(mac)
+        history = get_boot_history(mac, count, status)
         for i in history:
             if status == False:
                 entries.append(i)
@@ -664,7 +676,10 @@ def get_last_boot_requests(count = False, mac = False, status = False):
     if count:
         if count == 1:
             return ret[0]
-        else:
+        elif count and first:
+            print "Show %d elements from %d" % (count, first)
+            return ret[first:first+count]
+        elif count and not first:
             return ret[0:count]
     else:
         return ret
@@ -708,11 +723,24 @@ def boot_history():
     if status:
         status = int(status)
 
+    per_page = int(app.config['ELEMENTS_PER_PAGE'])
+    page = int(flask.request.args.get('page', 1))
+
     mac = flask.request.args.get('mac', False)
-    entries = get_last_boot_requests(False, mac = mac, status = status)
+    entries = get_last_boot_requests(count = per_page, first = per_page*page, mac = mac, status = status)
+
+    previous_page = False
+    next_page = False
+
+    if page > 1:
+        previous_page = page - 1
+
+    if len(entries) == per_page:
+        next_page = page + 1
 
     return flask.render_template("boot-history.html", title = "Boot history", \
-        active = "history", entries = entries, mac = mac, status = status)
+        active = "history", entries = entries, mac = mac, status = status, \
+        page = page, previous_page = previous_page, next_page = next_page)
 
 @app.route("/mac/<mac>")
 @app.route("/mac/<mac>/")

@@ -12,6 +12,15 @@
   {% endif %}
 {% endif %}
 
+<p class="text-center">
+  {% if previous_page %}
+    <a href="/boot-history?page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }}...</button></a>
+  {% endif %}
+  {% if next_page %}
+    <a href="/boot-history?page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }}...</button></a>
+  {% endif %}
+</p>
+
 <table class="table table-hover">
   <thead>
     <tr>
@@ -95,5 +104,14 @@
   {% endfor %}
   </tbody>
 </table>
+
+<p class="text-center">
+  {% if previous_page %}
+    <a href="/boot-history?page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }}</button></a>
+  {% endif %}
+  {% if next_page %}
+    <a href="/boot-history?page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }}</button></a>
+  {% endif %}
+</p>
 
 {% include "footer.html" %}
