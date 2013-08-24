@@ -7,8 +7,8 @@
 echo 
 echo The boot request was denied. 
 echo You do not have permission to access this configuration. Please ensure that the 
-echo IP address (${net0/ip}), UUID (${uuid}) and 
-echo the hostname (${hostname}) match the access filter for this MAC address (${net0/mac}).
+echo IP address ${net0/ip}, UUID ${uuid} and 
+echo hostname ${hostname} match the security filter set for MAC address ${net0/mac}.
 echo 
 
 exit
