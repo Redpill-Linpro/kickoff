@@ -636,10 +636,12 @@ def humanize_date_difference(now, otherdate=None, offset=None):
 def get_boot_history(mac, count = False, status = False):
     history = []
     path = app.config['STATE_DIR'] + '/' + mac
+
     if status == 1:
         revisions = get_revisions(path, count, reverse = False)
     else:
         revisions = get_revisions(path, count)
+
     now = datetime.datetime.now()
     counter = 0
     for ts in revisions:
@@ -648,6 +650,7 @@ def get_boot_history(mac, count = False, status = False):
         data['age'] = humanize_date_difference(dt,now)
         history.append(data)
         if count:
+             data['seconds'] = (now-dt).seconds
              if status:
                  if data['status'] == status:
                      counter += 1
@@ -684,7 +687,7 @@ def get_last_boot_requests(count = False, first = False, mac = False, status = F
         if count == 1:
             return ret[0]
         elif count and first:
-            print "Show %d elements from %d" % (count, first)
+            # For pages
             return ret[first:first+count]
         elif count and not first:
             return ret[0:count]

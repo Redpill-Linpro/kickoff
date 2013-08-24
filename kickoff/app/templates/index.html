@@ -60,8 +60,8 @@
       </thead>
       <tbody>
       {% for i in unknown %}
-        {% if i.status == 0 %}
-        <tr class="danger">
+        {% if i.seconds < 300 %}
+        <tr class="success">
         {% else %}
         <tr>
         {% endif %}
