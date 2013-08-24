@@ -42,7 +42,7 @@
         <tr>
           {% if host.hostname %}
             <td class="success">
-              Hostname filter enabled. Accept requests with hostname <strong>{{ host.hostname }}</strong>.
+              Hostname filter enabled. Accept requests with hostname <strong>{{ host.hostname }}</strong> only.
               <form action="" method="POST" class="pull-right">
                 <input type="hidden" name="do" value="unlock-hostname-filter"/>
                 <button type="submit">
