@@ -36,7 +36,7 @@
             {% if i.status == 0 %}
               <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
             {% elif i.status == 1 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span></a>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-eye-open" rel="tooltip" title="The host was discovered"></span></a>
             {% elif i.status == 2 %}
               <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
             {% elif i.status == 3 %}
@@ -80,7 +80,7 @@
             {% if i.status == 0 %}
               <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
             {% elif i.status == 1 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-star" rel="tooltip" title="The host was discovered"></span></a>
+              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-eye-open" rel="tooltip" title="The host was discovered"></span></a>
             {% elif i.status == 2 %}
               <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
             {% elif i.status == 3 %}
