@@ -573,7 +573,7 @@ def get_host_configuration(mac, uuid = False, remote_addr = False, hostname = Fa
 
     return data
 
-def get_revisions(path):
+def get_revisions(path, count = False, reverse = True):
     f = re.compile("^(\d+)\.json$")
     revisions = []
     if os.path.isdir(path):
@@ -584,8 +584,12 @@ def get_revisions(path):
                 ts = int(m.group(1))
                 revisions.append(ts)
     revisions.sort()
-    revisions.reverse()
-    return revisions
+    if reverse:
+        revisions.reverse()
+    if count:
+        return revisions[0:count]
+    else:
+        return revisions
         
 def get_all_mac_addresses():
     path = app.config['STATE_DIR']
@@ -632,7 +636,10 @@ def humanize_date_difference(now, otherdate=None, offset=None):
 def get_boot_history(mac, count = False, status = False):
     history = []
     path = app.config['STATE_DIR'] + '/' + mac
-    revisions = get_revisions(path)
+    if status == 1:
+        revisions = get_revisions(path, count, reverse = False)
+    else:
+        revisions = get_revisions(path, count)
     now = datetime.datetime.now()
     counter = 0
     for ts in revisions:
