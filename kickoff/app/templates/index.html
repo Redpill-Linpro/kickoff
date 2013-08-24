@@ -16,7 +16,11 @@
       </thead>
       <tbody>
       {% for i in known %}
+        {% if i.status == 0 %}
+        <tr class="danger">
+        {% else %}
         <tr>
+        {% endif %}
           <td>{{ i.age }}</td>
           <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
           <td>
@@ -56,7 +60,11 @@
       </thead>
       <tbody>
       {% for i in unknown %}
+        {% if i.status == 0 %}
+        <tr class="danger">
+        {% else %}
         <tr>
+        {% endif %}
           <td>{{ i.age }}</td>
           <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
           <td>

@@ -29,7 +29,11 @@
   </thead>
   <tbody>
   {% for i in entries %}
+    {% if i.status == 0 %}
+    <tr class="danger">
+    {% else %}
     <tr>
+    {% endif %}
       <td>{{ i.age }}</td>
       <td>{{ i.registered }}</td>
       {% if not mac %}
