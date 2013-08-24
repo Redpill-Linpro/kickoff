@@ -14,10 +14,11 @@
 
 <p class="text-center">
   {% if previous_page %}
-    <a href="/boot-history?page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }}...</button></a>
+    <a href="/boot-history?page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }} ...</button></a>
   {% endif %}
+  <a href="/boot-history?page={{ page }}"><button type="button" class="btn btn-primary disabled">Page {{ page }}</button></a>
   {% if next_page %}
-    <a href="/boot-history?page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }}...</button></a>
+    <a href="/boot-history?page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }} ...</button></a>
   {% endif %}
 </p>
 
@@ -107,10 +108,11 @@
 
 <p class="text-center">
   {% if previous_page %}
-    <a href="/boot-history?page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }}</button></a>
+    <a href="/boot-history?page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }} ...</button></a>
   {% endif %}
+  <a href="/boot-history?page={{ page }}"><button type="button" class="btn btn-primary disabled">Page {{ page }}</button></a>
   {% if next_page %}
-    <a href="/boot-history?page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }}</button></a>
+    <a href="/boot-history?page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }} ...</button></a>
   {% endif %}
 </p>
 
