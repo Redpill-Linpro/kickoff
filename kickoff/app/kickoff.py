@@ -804,9 +804,21 @@ def mac_history(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
+    per_page = int(app.config['ELEMENTS_PER_PAGE'])
+    page = int(flask.request.args.get('page', 1))
+
     boot = get_last_boot_requests(1, mac = mac)
     status = flask.request.args.get('status', False)
     entries = get_last_boot_requests(False, mac = mac, status = status)
+
+    previous_page = False
+    next_page = False
+
+    if page > 1:
+        previous_page = page - 1
+
+    if len(entries) == per_page:
+        next_page = page + 1
 
     if mac:
         title = "%s boot history" % mac
@@ -815,7 +827,8 @@ def mac_history(mac):
 
     return flask.render_template("boot-history.html", title = title, \
         active = "history", entries = entries, mac = mac, status = status, \
-        boot = boot)
+        boot = boot, page = page, next_page = next_page, \
+        previous_page = previous_page)
 
 @app.route("/about/")
 @app.route("/about")
