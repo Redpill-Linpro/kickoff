@@ -159,7 +159,7 @@ def save_state(mac, data = {}):
 
     else:
         status = True
-        print "State file created (%s)." % (filepath)
+        #print "State file created (%s)." % (filepath)
 
         history = app.config['HISTORY_DIR']
         if not os.path.exists(history):
@@ -855,6 +855,7 @@ def boot_history():
     if mac:
         mac = clean_mac(mac)
         boot = get_boot_requests(limit = 1, mac = mac)
+
         title = "%s boot history" % mac
     else:
         if int(s) == 1:
