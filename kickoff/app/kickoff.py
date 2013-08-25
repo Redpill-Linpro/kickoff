@@ -765,10 +765,15 @@ def boot_history():
         status = int(status)
 
     per_page = int(app.config['ELEMENTS_PER_PAGE'])
-    page = int(flask.request.args.get('page', 0))
+    page = int(flask.request.args.get('page', 1))
 
-    mac = flask.request.args.get('mac', False)
-    entries = get_last_boot_requests(count = per_page, first = per_page*page, mac = mac, status = status)
+    mac = clean_mac(flask.request.args.get('mac', False))
+
+    boot = False
+    if mac:
+        boot = get_last_boot_requests(1, mac = mac)
+
+    entries = get_last_boot_requests(count = per_page, first = per_page*(page-1), mac = mac, status = status)
 
     previous_page = False
     next_page = False
@@ -781,6 +786,7 @@ def boot_history():
 
     return flask.render_template("boot-history.html", title = "Boot history", \
         active = "history", entries = entries, mac = mac, status = status, \
+        boot = boot, \
         page = page, previous_page = previous_page, next_page = next_page)
 
 @app.route("/mac/<mac>")
@@ -845,31 +851,33 @@ def mac_history(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    per_page = int(app.config['ELEMENTS_PER_PAGE'])
-    page = int(flask.request.args.get('page', 0))
+    return flask.redirect('/boot-history?mac=%s' % mac)
 
-    boot = get_last_boot_requests(1, mac = mac)
-    status = flask.request.args.get('status', False)
-    entries = get_last_boot_requests(False, mac = mac, status = status)
+    #per_page = int(app.config['ELEMENTS_PER_PAGE'])
+    #page = int(flask.request.args.get('page', 1))
 
-    previous_page = False
-    next_page = False
+    #boot = get_last_boot_requests(1, mac = mac)
+    #status = flask.request.args.get('status', False)
+    #entries = get_last_boot_requests(False, mac = mac, status = status)
 
-    if page > 1:
-        previous_page = page - 1
+    #previous_page = False
+    #next_page = False
 
-    if len(entries) == per_page:
-        next_page = page + 1
+    #if page > 1:
+    #    previous_page = page - 1
 
-    if mac:
-        title = "%s boot history" % mac
-    else:
-        title = "Boot history"
+    #if len(entries) == per_page:
+    #    next_page = page + 1
 
-    return flask.render_template("boot-history.html", title = title, \
-        active = "history", entries = entries, mac = mac, status = status, \
-        boot = boot, page = page, next_page = next_page, \
-        previous_page = previous_page)
+    #if mac:
+    #    title = "%s boot history" % mac
+    #else:
+    #    title = "Boot history"
+
+    #return flask.render_template("boot-history.html", title = title, \
+    #    active = "history", entries = entries, mac = mac, status = status, \
+    #    boot = boot, page = page, next_page = next_page, \
+    #    previous_page = previous_page)
 
 @app.route("/about/")
 @app.route("/about")
