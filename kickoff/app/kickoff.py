@@ -507,9 +507,8 @@ def get_data(path, ts = False):
     if not os.path.isdir(path):
         return False
 
-    f = re.compile("^(\d+)\.json$")
-
     if not ts:
+        f = re.compile("^(\d+)\.json$")
         ts = 0
         for entry in os.listdir(path):
             i = path + '/' + entry
@@ -664,14 +663,11 @@ def humanize_date_difference(now, otherdate=None, offset=None):
     else:
         return "%ds" % delta_s
 
-def get_boot_history(mac, count = False, status = False):
+def get_boot_history(mac, limit = False):
     history = []
     path = app.config['STATE_DIR'] + '/' + mac
 
-    if status == 1:
-        revisions = get_revisions(path, count, reverse = False)
-    else:
-        revisions = get_revisions(path, count)
+    revisions = get_revisions(path, limit)
 
     now = datetime.datetime.now()
     counter = 0
@@ -680,50 +676,134 @@ def get_boot_history(mac, count = False, status = False):
         dt = timestamp_to_dt(ts)
         data['age'] = humanize_date_difference(dt,now)
         history.append(data)
-        if count:
+        if limit:
              data['seconds'] = (now-dt).seconds
-             if status:
-                 if data['status'] == status:
-                     counter += 1
-             else:
-                 counter += 1
 
-             if counter >= count:
+             counter += 1
+             if counter >= limit:
                   # Abort here as the number of return values are sufficient
                   # anyway
                   break
 
     return history
 
-def get_last_boot_requests(count = False, first = False, mac = False, status = False):
-    entries = []
-    macs = []
+def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
+    res = []
+
+    path = app.config['HISTORY_DIR']
+    f = re.compile('^(\d+)-(.*)')
     if mac:
+        path = app.config['STATE_DIR'] + '/' + mac
+        f = re.compile('^(\d{14}).json$')
+
+    now = datetime.datetime.now()
+
+    if not os.path.isdir(path):
+        print "Directory %s does not exists." % path
+        return []
+    
+    entries = sorted(os.listdir(path), reverse = True)
+
+    matched_counter = 0
+    for entry in entries:
+        matching = False
+        if os.path.islink('%s/%s' % (path, entry)):
+            m = f.match(entry)
+            if m:
+                ts = m.group(1)
+                mac = m.group(2)
+                mac = clean_mac(mac)
+        else:
+            m = f.match(entry)
+            if m:
+                ts = m.group(1)
+
+        if ts and mac:
+            state_path = app.config['STATE_DIR'] + '/' + mac
+            data = get_data(state_path, ts = ts)
+            dt = timestamp_to_dt(ts)
+            data['age'] = humanize_date_difference(dt,now)
+            data['seconds'] = (now-dt).seconds
+
+            # Status filter
+            if len(status) > 0:
+                if data['status'] in status:
+                    matching = True
+            else:
+                matching = True
+
+            if matching:
+                if matched_counter >= first:
+                    res.append(data)
+
+                matched_counter += 1
+
+        if limit:
+            if len(res) >= limit:
+                break
+
+    return res
+
+def get_boot_requests(first = 0, limit = False, mac = False, status = []):
+    macs = []
+
+    if mac:
+        # If mac is set, use STATE_DIR
         macs.append(mac)
     else:
-        macs = get_all_mac_addresses()
+        # If mac is not set, use HISTORY_DIR
+        path = app.config['HISTORY_DIR']
+        f = re.compile('^(\d+)-(.*)')
+        if os.path.isdir(path):
+            links = sorted(os.listdir(path), reverse = True)
 
+            if first and limit and status == []:
+                links = links[first:first+limit]
+
+            counter = 0
+            for entry in links:
+                if not os.path.islink('%s/%s' % (path,entry)):
+                    continue
+
+                m = f.match(entry)
+                if m:
+                    ts = m.group(1)
+                    mac = m.group(2)
+                    mac = clean_mac(mac)
+                    if ts and mac:
+                        counter += 1
+                        if not mac in macs:
+                            macs.append(mac)
+
+                if limit and status == []:
+                    if counter >= limit:
+                        break
+
+    entries = []
     for mac in macs:
-        history = get_boot_history(mac, count, status)
+        history = []
+        if limit and status == []:
+            history = get_boot_history(mac, limit)
+        else:
+            history = get_boot_history(mac)
+
         for i in history:
-            if status == False:
+            if len(status) == 0:
                 entries.append(i)
             else:
-                if i['status'] == int(status):
+                if i['status'] in status:
                     entries.append(i)
 
     ret = sorted(entries, key=lambda k: (-k['ts']))
- 
-    if count:
-        if count == 1:
-            return ret[0]
-        elif count and first:
+
+    if limit:
+        if first and limit:
             # For pages
-            return ret[first:first+count]
-        elif count and not first:
-            return ret[0:count]
-    else:
-        return ret
+            to = first+limit
+            if len(ret) > to:
+                return ret[first:to]
+ 
+    return ret
 
 # Use the DNS PTR to create logical groups of nodes. This method converts fqdn
 # to group name.
@@ -746,8 +826,8 @@ def get_reverse_address(ip):
 
 @app.route("/")
 def index():
-    known = get_last_boot_requests(5)
-    unknown = get_last_boot_requests(5, status = 1)
+    known = get_last_boot_requests(limit = 5)
+    unknown = get_last_boot_requests(limit = 5, status = [1])
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, known = known)
 
@@ -760,20 +840,29 @@ def domains():
 @app.route("/boot-history/")
 @app.route("/boot-history")
 def boot_history():
-    status = flask.request.args.get('status', False)
-    if status:
-        status = int(status)
-
     per_page = int(app.config['ELEMENTS_PER_PAGE'])
     page = int(flask.request.args.get('page', 1))
 
-    mac = clean_mac(flask.request.args.get('mac', False))
+    # Status filter
+    s = flask.request.args.get('status', False)
+    status = []
+    if s:
+        for i in list(s):
+            status.append(int(i))
 
     boot = False
+    mac = flask.request.args.get('mac', False)
     if mac:
-        boot = get_last_boot_requests(1, mac = mac)
+        mac = clean_mac(mac)
+        boot = get_boot_requests(limit = 1, mac = mac)
+        title = "%s boot history" % mac
+    else:
+        if int(s) == 1:
+            title = "Discovered hosts"
+        else:
+            title = "Boot history"
 
-    entries = get_last_boot_requests(count = per_page, first = per_page*(page-1), mac = mac, status = status)
+    entries = get_last_boot_requests(first = per_page*(page-1), limit = per_page, mac = mac, status = status)
 
     previous_page = False
     next_page = False
@@ -784,8 +873,8 @@ def boot_history():
     if len(entries) == per_page:
         next_page = page + 1
 
-    return flask.render_template("boot-history.html", title = "Boot history", \
-        active = "history", entries = entries, mac = mac, status = status, \
+    return flask.render_template("boot-history.html", title = title, \
+        active = "history", entries = entries, mac = mac, status = int(s), \
         boot = boot, \
         page = page, previous_page = previous_page, next_page = next_page)
 
@@ -801,7 +890,7 @@ def mac_security(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    boot = get_last_boot_requests(1, mac = mac)
+    boot = get_boot_requests(limit = 1, mac = mac)
 
     if flask.request.method == 'POST':
         try:
@@ -838,7 +927,7 @@ def mac_configuration(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    boot = get_last_boot_requests(1, mac = mac)
+    boot = get_boot_requests(limit = 1, mac = mac)
     host = get_host_configuration(mac)
 
     return flask.render_template("mac_configuration.html", \
@@ -853,37 +942,11 @@ def mac_history(mac):
 
     return flask.redirect('/boot-history?mac=%s' % mac)
 
-    #per_page = int(app.config['ELEMENTS_PER_PAGE'])
-    #page = int(flask.request.args.get('page', 1))
-
-    #boot = get_last_boot_requests(1, mac = mac)
-    #status = flask.request.args.get('status', False)
-    #entries = get_last_boot_requests(False, mac = mac, status = status)
-
-    #previous_page = False
-    #next_page = False
-
-    #if page > 1:
-    #    previous_page = page - 1
-
-    #if len(entries) == per_page:
-    #    next_page = page + 1
-
-    #if mac:
-    #    title = "%s boot history" % mac
-    #else:
-    #    title = "Boot history"
-
-    #return flask.render_template("boot-history.html", title = title, \
-    #    active = "history", entries = entries, mac = mac, status = status, \
-    #    boot = boot, page = page, next_page = next_page, \
-    #    previous_page = previous_page)
-
 @app.route("/about/")
 @app.route("/about")
 def about():
     macs = get_all_mac_addresses()
-    boots = get_last_boot_requests()
+    boots = get_boot_requests()
     return flask.render_template("about.html", title = "About", \
        active = "about", macs = macs, boots = boots)
 

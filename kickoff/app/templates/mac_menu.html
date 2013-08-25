@@ -1,5 +1,5 @@
-{% if boot['reverse'] %}
-  <h1>{{ boot['reverse'] }}</h1>
+{% if 'reverse' in boot %}
+  <h1>{{ boot.reverse }}</h1>
   <p class="lead">
     {{ mac }}
     {% if boot.vendor %}
