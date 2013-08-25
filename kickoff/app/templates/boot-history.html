@@ -31,7 +31,6 @@
      <th>Timestamp</th>
      {% if not mac %}
        <th>MAC</th>
-       <th>Vendor</th>
      {% endif %}
      <th>IP</th>
      <th>Hostname</th>
@@ -50,12 +49,11 @@
       <td>{{ i.age }}</td>
       <td>{{ i.registered }}</td>
       {% if not mac %}
-        <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
         <td>
-          {% if i.vendor %}
-            {{ i.vendor }}
+          {% if i.vendor %}
+            <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
           {% else %}
-            Unknown
+            <a rel="tooltip" title="Vendor unknown" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
           {% endif %}
         </td>
       {% endif %}

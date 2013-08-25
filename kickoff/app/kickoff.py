@@ -161,6 +161,17 @@ def save_state(mac, data = {}):
         status = True
         print "State file created (%s)." % (filepath)
 
+        history = app.config['HISTORY_DIR']
+        if not os.path.exists(history):
+            os.makedirs(history,0700)
+
+        linkpath = '%s/%s-%s' % (history, ts, mac)
+        try:
+            os.symlink(filepath, linkpath)
+        except:
+            print "Unable to create symlink from %s to %s" % \
+                (filepath, linkpath)
+
     return status
 
 ## Read the data for a spesific MAC address. Return a dict with the data.
