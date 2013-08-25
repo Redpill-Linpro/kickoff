@@ -22,7 +22,13 @@
         <tr>
         {% endif %}
           <td>{{ i.age }}</td>
-          <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+          <td>
+            {% if i.vendor %}
+              <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
+            {% else %}
+              <a rel="tooltip" title="Vendor unknown" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
+            {% endif %}
+          </td>
           <td>
             {% if i.reverse %}
               <a href="/mac/{{ i.mac }}">
@@ -66,7 +72,13 @@
         <tr>
         {% endif %}
           <td>{{ i.age }}</td>
-          <td><a href="/mac/{{ i.mac }}">{{ i.mac }}</a></td>
+          <td>
+            {% if i.vendor %}
+              <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
+            {% else %}
+              <a rel="tooltip" title="Vendor unknown" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
+            {% endif %}
+          </td>
           <td>
             {% if i.reverse %}
               <a href="/mac/{{ i.mac }}">

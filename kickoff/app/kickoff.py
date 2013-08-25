@@ -81,6 +81,22 @@ def timestamp_to_dt(timestamp):
     t = datetime.datetime.strptime(str(timestamp), '%Y%m%d%H%M%S')
     return t
 
+def get_vendor(mac):
+    path = '/vagrant/kickoff/conf/oui.txt'
+    vendor = False
+    if not os.path.isfile(path):
+        return False
+
+    needle = mac[0:8].upper()
+    r = re.compile('^\s+%s\s+\(hex\)\s+(.*)' % needle)
+    with open(path, 'r') as f:
+        for line in f:
+            m = r.search(line)
+            if m:
+                vendor = m.group(1)
+
+    return vendor
+
 # Save the data for a spesific MAC address.
 def save_host(mac, data = {}):
     path = app.config['HOST_DIR'] + '/' + mac
@@ -548,6 +564,10 @@ def get_host_configuration(mac, uuid = False, remote_addr = False, hostname = Fa
         data['remote_addr'] = remote_addr
         data['hostname'] = hostname
 
+        vendor = get_vendor(mac)
+        if vendor:
+            data['vendor'] = vendor
+
         now = datetime.datetime.now()
         ts = dt_to_timestamp(now)
 
@@ -734,7 +754,7 @@ def boot_history():
         status = int(status)
 
     per_page = int(app.config['ELEMENTS_PER_PAGE'])
-    page = int(flask.request.args.get('page', 1))
+    page = int(flask.request.args.get('page', 0))
 
     mac = flask.request.args.get('mac', False)
     entries = get_last_boot_requests(count = per_page, first = per_page*page, mac = mac, status = status)
@@ -815,7 +835,7 @@ def mac_history(mac):
         return flask.make_response("The given mac address is not valid", 400)
 
     per_page = int(app.config['ELEMENTS_PER_PAGE'])
-    page = int(flask.request.args.get('page', 1))
+    page = int(flask.request.args.get('page', 0))
 
     boot = get_last_boot_requests(1, mac = mac)
     status = flask.request.args.get('status', False)
@@ -878,6 +898,9 @@ def bootstrap(mac):
     data['remote_addr'] = remote_addr
     data['status']      = status
     data['hostname']    = hostname
+
+    if 'vendor' in host:
+        data['vendor']  = host['vendor']
 
     reverse = get_reverse_address(remote_addr)
     if reverse:

@@ -1,8 +1,16 @@
 {% if boot['reverse'] %}
   <h1>{{ boot['reverse'] }}</h1>
-  <small>{{ mac }}</small>
+  <p class="lead">
+    {{ mac }}
+    {% if boot.vendor %}
+      {{ boot.vendor }}
+    {% endif %}
+  </p>
 {% else %}
   <h1>{{ mac }}</h1>
+  {% if boot.vendor %}
+    <p class="lead">{{ boot.vendor }}</p>
+  {% endif %}
 {% endif %}
 <ul class="nav nav-tabs">
   <li {% if active=="history" %}class="active"{%endif%}><a href="/mac/{{ mac }}/history">Boot history</a></li>
