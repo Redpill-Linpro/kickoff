@@ -14,63 +14,6 @@ app = flask.Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_pyfile('../conf/kickoff.cfg')
 
-## Return an array of the images available.
-#def get_images():
-#    images = []
-#    basepath = app.config['IMAGEDIR']
-#    if os.path.isdir(basepath):
-#        for image in os.listdir(basepath):
-#            if os.path.isdir('%s/%s' % (basepath,image)):
-#                 if len(get_image_releases(image)) > 0:
-#                     images.append(image)
-#            
-#    return images
-#
-## Return an array of the releases available for a spesific image.
-#def get_image_releases(image):
-#    releases = []
-#    basepath = '%s/%s' % (app.config['IMAGEDIR'],image)
-#    if os.path.isdir(basepath):
-#        for release in os.listdir(basepath):
-#            if os.path.isdir('%s/%s' % (basepath,release)):
-#                 if os.path.isfile('%s/%s/boot.pxe' % (basepath,release)):
-#                     releases.append(release)
-#
-#    return releases
-#
-## Return a dict containing the releases (with files) of a spesific image.
-#def get_image_release(image,release):
-#    files = {}
-#    basepath = '%s/%s/%s' % (app.config['IMAGEDIR'],image,release)
-#    if os.path.isdir(basepath):
-#        for filename in os.listdir(basepath):
-#            files[filename] = {}
-#
-#            filepath = '%s/%s' % (basepath,filename)
-#            if os.path.isfile(filepath):
-#                 stat=os.stat(filepath)
-#
-#                 i={}
-#                 i['path'] = filepath
-#                 i['size'] = stat.st_size
-#                 i['mtime'] = stat.st_mtime
-#                 i['mtime_iso'] = datetime.datetime.fromtimestamp( \
-#                     stat.st_mtime).strftime("%Y-%m-%d %H:%S:%M")
-#
-#                 files[filename]=i
-#
-#    return files
-#
-## Return a default boot script.
-#def boot_script_on_error(mac):
-#    text="""#!ipxe
-#echo Unable to deliver the boot configuration for %s.
-#echo Will reboot in 60 seconds.
-#sleep 60
-#reboot
-#""" % (mac)
-#    return text
-
 # Convert from datetime object to timestamp
 def dt_to_timestamp(dt):
     t = dt.strftime("%Y%m%d%H%M%S")
@@ -174,276 +117,6 @@ def save_state(mac, data = {}):
 
     return status
 
-## Read the data for a spesific MAC address. Return a dict with the data.
-#def read_data(mac):
-#    data = {}
-#    basepath = app.config['VARDIR']
-#    if os.path.isdir(basepath):
-#        filepath = '%s/%s.json' % (basepath,mac)
-#        if os.path.isfile(filepath):
-#            f = open(filepath,'r')
-#            if f:
-#                 try:
-#                     content = json.loads(f.read())
-#
-#                 except:
-#                     syslog.syslog(syslog.LOG_ERR,"%s: Unable to decode json " \
-#                         "in %s." % (mac,filepath))
-#
-#                 else:
-#                     if mac in content:
-#                         data = content[mac]
-#
-#                     else:
-#                         syslog.syslog(syslog.LOG_ERR,"%s: Something " \
-#                             "uncool happened." % (mac))
-#
-#        else:
-#            do_log("INFO","Discovered a new node with MAC %s" % (mac))
-#            syslog.syslog(syslog.LOG_ERR,"%s: Configuration not found " \
-#                "(%s)." % (mac,filepath))
-#    
-#    return data
-#
-## Return a dict containing all images and releases available.
-#def get_images_and_releases():
-#    ret = {}
-#
-#    images = get_images()
-#    for image in images:
-#        ret[image] = {}
-#        releases = get_image_releases(image)
-#
-#        for release in releases:
-#            ret[image][release] = get_image_release(image,release)
-#
-#    return ret
-#
-## Return an array of all MAC addresses known by the strapper.
-#def get_all_known_macs():
-#    macs = []
-#    basepath = '%s' % (app.config['VARDIR'])
-#
-#    if os.path.isdir(basepath):
-#        for m in os.listdir(basepath):
-#            filepath = '%s/%s' % (app.config['VARDIR'],m)
-#            if os.path.isfile(filepath):
-#                try:
-#                    f = open(filepath,'r')
-#                    content = json.loads(f.read())
-#
-#                except:
-#                    syslog.syslog(syslog.LOG_ERR,"Unable to read " \
-#                        "configuration file (%s)." % (filepath))
-#
-#                else:
-#                    if len(content) == 1:
-#                        # Add the MAC address to the array
-#                        macs.append(content.keys()[0])
-#
-#    return macs
-#
-## Return the active boot script for a spesific MAC address.
-#def get_boot_script(mac):
-#
-#    # Serve some default script
-#    script = boot_script_on_error(mac)
-#
-#    data = read_data(mac)
-#
-#    success = False
-#
-#    try:
-#        image = data['image']
-#        release = data['release']
-#
-#    except:
-#        syslog.syslog(syslog.LOG_ERR,"%s: Unable to read image and release from the database. MAC is not configured." % (mac))
-#
-#    else:
-#        syslog.syslog(syslog.LOG_INFO,"%s: Will serve image %s, release %s." % (mac,image,release))
-#
-#        basepath = '%s/%s/%s' % (app.config['IMAGEDIR'],image,release)
-#        bootfile = '%s/boot.pxe' % (basepath)
-#
-#        if os.path.isfile(bootfile):
-#            try:
-#                f = open(bootfile,'r')
-#
-#            except:
-#                syslog.syslog(syslog.LOG_ERR,"%s: Unable to read boot " \
-#                    "configuration file (%s)." % (mac,bootfile))
-#
-#            else:
-#                script = f.read()
-#                f.close()
-#                success = True
-#                do_log("INFO","Boot configuration (%s, %s) served to %s" \
-#                    % (image, release, mac))
-#
-#        else:
-#            syslog.syslog(syslog.LOG_ERR,"%s: Boot configuration file " \
-#                "(%s) was not found." % (mac,bootfile))
-#
-#    # Boot counter
-#    try:
-#        count = data['bootcount']
-#
-#    except:
-#        data['bootcount'] = 1
-#
-#    else:
-#        data['bootcount'] = int(count) + 1
-#
-#    data['lastbootscript'] = script
-#    data['success'] = success
-#
-#    now = datetime.datetime.now()
-#    data['lastboot'] = now.strftime("%Y%m%d%H%M%S")
-#    data['lastboot_iso'] = now.strftime("%Y-%m-%d %H:%M:%S")
-#
-#    data['remote_addr'] = cgi.escape(os.environ['REMOTE_ADDR'])
-#
-#    if not save_data(mac,data):
-#        syslog.syslog(syslog.LOG_ERR,"%s: Unable to save data." % (mac))
-#
-#    return script
-#
-## Use the DNS PTR to create logical groups of nodes. This method converts fqdn
-## to group name.
-#def extract_nodegroup_from_fqdn(fqdn):
-#    group = False
-#    rule = re.compile('^[^\.]+\.(.*)')
-#    res = rule.search(fqdn)
-#    if res:
-#        if res.group(1):
-#            group = res.group(1)
-#
-#    return group
-#
-#def get_nodegroup(group):
-#    macs = get_all_known_macs()
-#
-#    ret = {}
-#
-#    for mac in macs:
-#        data = read_data(mac)
-#        try:
-#            remote_addr = data['remote_addr']
-# 
-#        except:
-#            pass
-#
-#        else:
-#            try:
-#                reverse = socket.gethostbyaddr(remote_addr)[0]
-#
-#            except:
-#                syslog.syslog(syslog.LOG_ERR,"%s: Unable to reverse lookup %s" \
-#                    % (mac,remote_addr))
-#
-#            else:
-#                data['reverse'] = reverse
-#                this_group = extract_nodegroup_from_fqdn(reverse)
-#                if group == this_group:
-#                    ret[mac] = data
-#
-#    return ret
-#
-#def get_nodegroups():
-#    macs = get_all_known_macs()
-#
-#    data = {}
-#    nodegroups = {}
-#
-#    rule = re.compile('^[^\.]+\.(.*)')
-#
-#    for mac in macs:
-#        data[mac] = read_data(mac)
-#        try:
-#            remote_addr = data[mac]['remote_addr']
-# 
-#        except:
-#            pass
-#
-#        else:
-#            try:
-#                reverse = socket.gethostbyaddr(remote_addr)[0]
-#
-#            except:
-#                syslog.syslog(syslog.LOG_ERR,"%s: Unable to reverse lookup %s" \
-#                    % (mac,remote_addr))
-#
-#            else:
-#                res = rule.search(reverse)
-#                if res:
-#                    group = res.group(1)
-#
-#                    if group in nodegroups:
-#                        nodegroups[group] += 1
-#
-#                    else:
-#                        nodegroups[group] = 1
-#
-#    return nodegroups
-#
-## Return an array containing the dates in which there are log entries.
-#def get_logs():
-#    logs = []
-#
-#    basepath = app.config['LOGDIR']
-#
-#    rule = re.compile('^strapper-(\d\d\d\d-\d\d-\d\d).log$')
-#
-#    if os.path.isdir(basepath):
-#        for filename in os.listdir(basepath):
-#            res = rule.match(filename)
-#            if res.group(1):
-#                day = res.group(1)
-#                logs.insert(0,day)
-#            
-#    return logs
-#
-## Return an array containing the log entries of a given date.
-#def read_log(day):
-#    log = []
-#
-#    # Input validation
-#    if re.match("^\d\d\d\d-\d\d-\d\d$",day):
-#
-#        logfile = '%s/strapper-%s.log' \
-#            % (app.config['LOGDIR'],day)
-#
-#        try:
-#            f = open(logfile,"r")
-#            for line in f:
-#                log.insert(0,line)
-#
-#        except:
-#            pass
-#
-#    return log
-#
-## Write a log entry. Levels should be DEBUG, INFO, WARNING or ERROR.
-#def do_log(level,text):
-#    now = datetime.datetime.now()
-#    logfile = '%s/strapper-%s.log' \
-#        % (app.config['LOGDIR'],now.strftime("%Y-%m-%d"))
-#    remote_addr = cgi.escape(os.environ['REMOTE_ADDR'])
-#
-#    try:
-#        f = open(logfile,"a+")
-#        line = '%s %s %s %s\n' % (remote_addr, \
-#            now.strftime("%Y-%m-%d %H:%M:%S"),level,text)
-#        f.write(line)
-#        f.close()
-#
-#    except:
-#        return False
-#
-#    else:
-#        return True
-#
 ## Give MAC addresses nice formatting.
 def clean_mac(mac):
     # Remove all uneccessary characters from the given mac address
@@ -663,30 +336,6 @@ def humanize_date_difference(now, otherdate=None, offset=None):
     else:
         return "%ds" % delta_s
 
-def get_boot_history(mac, limit = False):
-    history = []
-    path = app.config['STATE_DIR'] + '/' + mac
-
-    revisions = get_revisions(path, limit)
-
-    now = datetime.datetime.now()
-    counter = 0
-    for ts in revisions:
-        data = get_data(path, ts=ts)
-        dt = timestamp_to_dt(ts)
-        data['age'] = humanize_date_difference(dt,now)
-        history.append(data)
-        if limit:
-             data['seconds'] = (now-dt).seconds
-
-             counter += 1
-             if counter >= limit:
-                  # Abort here as the number of return values are sufficient
-                  # anyway
-                  break
-
-    return history
-
 def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
     res = []
 
@@ -744,67 +393,6 @@ def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
 
     return res
 
-def get_boot_requests(first = 0, limit = False, mac = False, status = []):
-    macs = []
-
-    if mac:
-        # If mac is set, use STATE_DIR
-        macs.append(mac)
-    else:
-        # If mac is not set, use HISTORY_DIR
-        path = app.config['HISTORY_DIR']
-        f = re.compile('^(\d+)-(.*)')
-        if os.path.isdir(path):
-            links = sorted(os.listdir(path), reverse = True)
-
-            if first and limit and status == []:
-                links = links[first:first+limit]
-
-            counter = 0
-            for entry in links:
-                if not os.path.islink('%s/%s' % (path,entry)):
-                    continue
-
-                m = f.match(entry)
-                if m:
-                    ts = m.group(1)
-                    mac = m.group(2)
-                    mac = clean_mac(mac)
-                    if ts and mac:
-                        counter += 1
-                        if not mac in macs:
-                            macs.append(mac)
-
-                if limit and status == []:
-                    if counter >= limit:
-                        break
-
-    entries = []
-    for mac in macs:
-        history = []
-        if limit and status == []:
-            history = get_boot_history(mac, limit)
-        else:
-            history = get_boot_history(mac)
-
-        for i in history:
-            if len(status) == 0:
-                entries.append(i)
-            else:
-                if i['status'] in status:
-                    entries.append(i)
-
-    ret = sorted(entries, key=lambda k: (-k['ts']))
-
-    if limit:
-        if first and limit:
-            # For pages
-            to = first+limit
-            if len(ret) > to:
-                return ret[first:to]
- 
-    return ret
-
 # Use the DNS PTR to create logical groups of nodes. This method converts fqdn
 # to group name.
 def extract_domain_from_fqdn(fqdn):
@@ -854,7 +442,7 @@ def boot_history():
     mac = flask.request.args.get('mac', False)
     if mac:
         mac = clean_mac(mac)
-        boot = get_boot_requests(limit = 1, mac = mac)
+        boot = get_last_boot_requests(limit = 1, mac = mac)
 
         title = "%s boot history" % mac
     else:
@@ -891,7 +479,7 @@ def mac_security(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    boot = get_boot_requests(limit = 1, mac = mac)
+    boot = get_last_boot_requests(limit = 1, mac = mac)
 
     if flask.request.method == 'POST':
         try:
@@ -929,7 +517,7 @@ def mac_configuration(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    boot = get_boot_requests(limit = 1, mac = mac)
+    boot = get_last_boot_requests(limit = 1, mac = mac)
     host = get_host_configuration(mac)
 
     return flask.render_template("mac_configuration.html", \
@@ -947,10 +535,8 @@ def mac_history(mac):
 @app.route("/about/")
 @app.route("/about")
 def about():
-    macs = get_all_mac_addresses()
-    boots = get_boot_requests()
     return flask.render_template("about.html", title = "About", \
-       active = "about", macs = macs, boots = boots)
+       active = "about")
 
 @app.route("/bootstrap/mac-<mac>.ipxe")
 def bootstrap(mac):
@@ -997,181 +583,6 @@ def bootstrap(mac):
 
     return flask.make_response(ipxe, 200, h)
 
-#@app.route("/group/<group>")
-#def group(group):
-#    nodegroup = get_nodegroup(group)
-#    return render_template("group.html", nodegroup = nodegroup, group = group)
-#
-#@app.route("/images")
-#def images():
-#    images = get_images_and_releases()
-#    return render_template("images.html", images = images)
-#
-#@app.route("/log/<day>")
-#def log(day):
-#    log = read_log(day)
-#    return render_template('log.html', log = log, day = day)
-#
-#@app.route("/logs")
-#def logs():
-#    logs = get_logs()
-#    return render_template('logs.html', logs = logs)
-#
-## Print the boot scripts to the nodes
-#@app.route("/boot/<mac>")
-#def boot(mac):
-#    script = False
-#
-#    # Make sure the specified mac address is clean
-#    mac = clean_mac(mac)
-#
-#    if mac:
-#        syslog.syslog(syslog.LOG_ERR,"Boot request from %s received." % (mac))
-#
-#    if mac:
-#        # Fetch the active boot script for this mac address
-#        script = get_boot_script(mac)
-#
-#    response = make_response(render_template('boot.html', script = script))
-#    response.headers['content-type'] = 'text/plain'
-#    return response
-#
-#@app.route("/setrelease/<mac>", methods = ['POST','GET'])
-#def setrelease(mac):
-#    data = False
-#    success = False
-#    releases = False
-#    mac = clean_mac(mac)
-#    data = read_data(mac)
-#
-#    if request.method == 'POST':
-#        try:
-#            release = request.form['release']
-#
-#            # Input validation
-#            re.match("^[0-9a-zA-z-_\.]+$",release)
-#
-#        except:
-#            release = False
-#
-#        else:
-#            try:
-#                image = data['image']
-#
-#            except:
-#                pass
-#
-#            else:
-#                releases = get_image_releases(image)
-#                if release in releases:
-#                    data['release'] = release
-#                    if save_data(mac,data):
-#                        do_log("INFO","Release changed to %s for MAC %s" \
-#                            % (release,mac))
-#                        success = True
-#
-#    else:
-#        try:
-#            data['image']
-#
-#        except:
-#            pass
-#
-#        else:
-#            releases = get_image_releases(data['image'])
-#
-#    try:
-#        reverse = socket.gethostbyaddr(data['remote_addr'])[0]
-#        group = extract_nodegroup_from_fqdn(reverse)
-#
-#    except:
-#        pass
-#
-#    else:
-#        data['reverse'] = reverse
-#        data['group'] = group
-#
-#    return render_template('setrelease.html', data = data, mac = mac, \
-#       releases = releases, method = request.method, success = success)
-#
-#@app.route("/setimage/<mac>", methods = ['POST','GET'])
-#def setimage(mac):
-#    data = False
-#    images = False
-#    success = False
-#    mac = clean_mac(mac)
-#    data = read_data(mac)
-#    images = get_images()
-#
-#    if request.method == 'POST':
-#        try:
-#            image = request.form['image']
-#
-#            # Input validation
-#            re.match("^[0-9a-zA-z-_\.]+$",image)
-#
-#        except:
-#            image = False
-#
-#        else:
-#            if image in images:
-#                data['image'] = image
-#                data['release'] = False
-#
-#                if save_data(mac,data):
-#                    do_log("INFO","Image changed to %s for MAC %s" \
-#                        % (image,mac))
-#                    success = True
-#
-#    try:
-#        reverse = socket.gethostbyaddr(data['remote_addr'])[0]
-#        group = extract_nodegroup_from_fqdn(reverse)
-#
-#    except:
-#        pass
-#
-#    else:
-#        data['reverse'] = reverse
-#        data['group'] = group
-#
-#    return render_template('setimage.html', data = data, mac = mac, \
-#       images = images, method = request.method, success = success)
-#
-#@app.route("/node/<mac>")
-#def node(mac):
-#    script = False
-#    data = False
-#
-#    # Make sure the specified mac address is clean
-#    mac = clean_mac(mac)
-#
-#    if mac:
-#        # Fetch the active boot script for this mac address
-#        data = read_data(mac)
-#        try:
-#            reverse = socket.gethostbyaddr(data['remote_addr'])[0]
-#            group = extract_nodegroup_from_fqdn(reverse)
-#
-#        except:
-#            pass
-#
-#        else:
-#            data['reverse'] = reverse
-#            data['group'] = group
-#            images = get_images()
-#
-#            try:
-#                data['image']
-#
-#            except:
-#                releases = False
-#
-#            else:
-#                releases = get_image_releases(data['image'])
-#
-#    return render_template('node.html', data = data, mac = mac, \
-#       images = images, releases = releases)
-    
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
 
