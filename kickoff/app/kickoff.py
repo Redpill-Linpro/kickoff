@@ -423,8 +423,23 @@ def index():
 @app.route("/domains/")
 @app.route("/domains")
 def domains():
+    macs = get_all_mac_addresses()
+    domains = {}
+    for mac in macs:
+        reverse = False
+        boot = get_last_boot_requests(limit = 1, mac = mac)
+        if len(boot) == 1:
+            if 'reverse' in boot[0]:
+                reverse = boot[0]['reverse']
+                domain = extract_domain_from_fqdn(reverse)
+                if domain:
+                    if not domain in domains:
+                        domains[domain] = 0
+                    else:
+                        domains[domain] += 1
+
     return flask.render_template("domains.html", title = "Domains", \
-        active = "domains")
+        active = "domains", domains = domains)
 
 @app.route("/boot-history/")
 @app.route("/boot-history")
