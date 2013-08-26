@@ -12,12 +12,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr>
-          {% for domain in domains | sort %}
-            <td><a href="/domains/{{ domain }}">{{ domain }}</td>
+        {% for domain in domains | sort %}
+          <tr>
+            <td><a href="/domain/{{ domain }}">{{ domain }}</a></td>
             <td>{{ domains[domain] }}</td>
-          {% endfor %}
-        </tr>
+          </tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>

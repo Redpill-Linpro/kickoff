@@ -118,6 +118,15 @@ def save_state(mac, data = {}):
 
     return status
 
+# Input validation for domains
+def clean_domain(domain):
+    f = re.compile('[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*')
+    m = f.match(domain)
+    if not m:
+       domain = False
+
+    return domain
+
 ## Give MAC addresses nice formatting.
 def clean_mac(mac):
     # Remove all uneccessary characters from the given mac address
@@ -440,6 +449,30 @@ def domains():
 
     return flask.render_template("domains.html", title = "Domains", \
         active = "domains", domains = domains)
+
+@app.route("/domain/<domain>")
+def domain(domain):
+    domain = clean_domain(domain)
+    if not domain:
+        return flask.make_response("The given domain is not valid", 400)
+
+    macs = get_all_mac_addresses()
+    hosts = []
+    for mac in macs:
+        reverse = False
+        boot = get_last_boot_requests(limit = 1, mac = mac)
+        if len(boot) == 1:
+            if 'reverse' in boot[0]:
+                reverse = boot[0]['reverse']
+                this_domain = extract_domain_from_fqdn(reverse)
+                if this_domain == domain:
+                    boot = get_last_boot_requests(limit = 1, mac = mac)
+                    if len(boot) == 1:
+                        data = boot[0]
+                        hosts.append(data)
+
+    return flask.render_template("domain.html", title = "Domain %s" % domain, \
+        active = "domain", hosts = hosts, domain = domain)
 
 @app.route("/boot-history/")
 @app.route("/boot-history")
