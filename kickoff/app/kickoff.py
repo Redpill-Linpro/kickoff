@@ -900,19 +900,20 @@ def mac_security(mac):
             pass
         else:
             host = get_host_configuration(mac)
-            if do == "unlock-ip-filter":
-                del(host['remote_addr'])
-            elif do == "unlock-uuid-filter":
-                del(host['uuid'])
-            elif do == "unlock-hostname-filter":
-                del(host['hostname'])
-            if do == "lock-ip-filter":
-                host['remote_addr'] = boot['remote_addr']
-            elif do == "lock-uuid-filter":
-                host['uuid'] = boot['uuid']
-            elif do == "lock-hostname-filter":
-                host['hostname'] = boot['hostname']
-
+            if len(boot) == 1:
+                if do == "unlock-ip-filter":
+                    del(host['remote_addr'])
+                elif do == "unlock-uuid-filter":
+                    del(host['uuid'])
+                elif do == "unlock-hostname-filter":
+                    del(host['hostname'])
+                if do == "lock-ip-filter":
+                    host['remote_addr'] = boot[0]['remote_addr']
+                elif do == "lock-uuid-filter":
+                    host['uuid'] = boot[0]['uuid']
+                elif do == "lock-hostname-filter":
+                    host['hostname'] = boot[0]['hostname']
+    
             save_host(mac, host)
 
     host = get_host_configuration(mac)
