@@ -429,6 +429,13 @@ def index():
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, known = known)
 
+@app.route("/configurations/")
+@app.route("/configurations")
+def configurations():
+    return flask.render_template("configurations.html", \
+        title = "Configurations", \
+        active = "configurations")
+
 @app.route("/domains/")
 @app.route("/domains")
 def domains():
