@@ -443,7 +443,7 @@ def domains():
                 domain = extract_domain_from_fqdn(reverse)
                 if domain:
                     if not domain in domains:
-                        domains[domain] = 0
+                        domains[domain] = 1
                     else:
                         domains[domain] += 1
 
