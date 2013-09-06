@@ -1,5 +1,5 @@
 $packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim', 
-              'uwsgi-plugin-http', 'curl' ]
+              'uwsgi-plugin-http', 'curl', 'python-dulwich' ]
 package {
     $packages: ensure => installed;
 }
