@@ -668,7 +668,7 @@ def get_bootstrap_cfg():
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
 
-    repo = gitsh.gitsh(repository, cache)
+    repo = gitsh.gitsh(repository, cache, True)
     if os.path.isdir(cache):
         repo.pull()
     else:

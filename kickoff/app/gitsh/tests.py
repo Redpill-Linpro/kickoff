@@ -4,8 +4,8 @@ import sys
 #import git
 import os
 import re
-import gitsh
 import tempfile
+import gitsh
 
 repository=tempfile.mkdtemp()
 cache=tempfile.mkdtemp()

@@ -92,7 +92,7 @@ class gitsh():
     def pull(self):
         s = False
     
-        pr = subprocess.Popen(['git', 'pull', self.cache],
+        pr = subprocess.Popen(['git', 'pull'],
                cwd=self.cache,
                stdout=subprocess.PIPE, 
                stderr=subprocess.PIPE, 
@@ -109,7 +109,7 @@ class gitsh():
             if self.verbose:
                 print "Failed to pull repository %s" % \
                     (self.cache)
-    
+
         return (s,out,error,pr.returncode)
     
     def add(self, path):
