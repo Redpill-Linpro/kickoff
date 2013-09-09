@@ -1,3 +1,0 @@
-#!ipxe
-sleep 60
-reboot
