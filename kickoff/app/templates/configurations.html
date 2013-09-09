@@ -1,0 +1,22 @@
+{% include "header.html" %}
+
+<h1>Configurations</h1>
+
+<div class="row">
+  <div class="col-md-6">
+    <table>
+      <thead>
+      </thead>
+      <tbody>
+        {% for domain in domains | sort %}
+          <tr>
+            <td><a href="/domain/{{ domain }}">{{ domain }}</a></td>
+            <td>{{ domains[domain] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "footer.html" %}

@@ -1,0 +1,21 @@
+{% include "header.html" %}
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+     <th><span class="glyphicon glyphicon-time"></span></th>
+     <th>Timestamp</th>
+     <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in revisions %}
+      <td>
+         {{ i.message }}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% include "footer.html" %}
