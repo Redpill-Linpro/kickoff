@@ -13,10 +13,6 @@ import subprocess
 
 class gitsh():
 
-    verbose = False
-    cache = False
-    repository = False
-
     def __init__(self, repository, cache, verbose = False):
         self.verbose = verbose
         self.repository = repository
