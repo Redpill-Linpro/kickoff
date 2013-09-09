@@ -8,7 +8,7 @@ import socket
 import datetime
 import hashlib
 import json
-import git
+import gitsh
 
 #from dulwich.repo import Repo
 #from dulwich.client import HttpGitClient
@@ -653,61 +653,53 @@ def save_host_boot_configuration(mac, ipxe, htaccess):
     status = False
     return status
 
+def read_file(path):
+    contents = False
+    try:
+        fp = open(path, 'r')
+    except:
+        pass
+    else:
+        contents = fp.read()
+
+    return contents
+
 def get_bootstrap_cfg():
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
 
-    if not os.path.isdir(cache):
-        repo = git.Repo.clone_from(repository,cache)
+    repo = gitsh.gitsh(repository, cache)
+    if os.path.isdir(cache):
+        repo.pull()
+    else:
+        repo.clone()
 
-    repo = git.Repo(cache)
-
-    try:
-        repo.remote().pull()
-
-    except:
-        print "Unable to pull remote origin"
-
-    meta = {}
     data = {}
-    
-    head = repo.head.commit
-    meta['tree'] = head.tree.hexsha
-    meta['message'] = head.message
-    meta['summary'] = head.summary
-    meta['author_name'] = head.author.name
-    meta['author_email'] = head.author.email
-    meta['authored_date'] = head.authored_date
-    meta['committed_date'] = head.committed_date
-
-    for d in head.tree:
-        if d.type == 'tree':
-            mac = d.path
+    for d in os.listdir(cache):
+        path = cache + "/" + d
+        if os.path.isdir(path):
+            mac = d
             if verify_mac(mac):
                 if not mac in data:
                     data[mac] = {}
     
-                data[mac]['tree'] = d.hexsha
-    
-                for f in d:
-                    if f.type == 'blob':
-                        if f.name == 'index.ipxe':
-                            data[mac]['ipxe'] = f.data_stream.read()
-    
-                        if f.name == '.htaccess':
-                            data[mac]['htaccess'] = f.data_stream.read()
-
-    return meta, data
+                for f in os.listdir(cache + "/" + mac):
+                    path = cache + "/" + mac + "/" + f
+                    if os.path.isfile(path):
+                        if f == 'index.ipxe':
+                            data[mac]['ipxe'] = read_file(path)
+            
+                        elif f == '.htaccess':
+                            data[mac]['htaccess'] = read_file(path)
+        
+    return data
 
 @app.route("/api/configuration/", methods = ['GET', 'POST'])
 @app.route("/api/configuration", methods = ['GET', 'POST'])
 def api_configuration():
     out = {}
     if flask.request.method == 'GET':
-        meta, cfg = get_bootstrap_cfg()
-
-        out['meta'] = meta
-        out['cfg'] = cfg
+        out = get_bootstrap_cfg()
 
     if flask.request.method == 'POST':
         try:
