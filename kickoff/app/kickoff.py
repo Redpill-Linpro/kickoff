@@ -153,6 +153,21 @@ def clean_mac(mac):
     
     return mac
 
+## Give MAC addresses nice formatting.
+def pretty_mac(mac):
+    # Remove all uneccessary characters from the given mac address
+    mac = re.sub('[^0-9a-fA-F]', '', mac)
+    mac = mac.lower()
+
+    # At this point, the mac address should be 12 characters
+    if len(mac) == 12:
+        mac = '%s-%s-%s-%s-%s-%s' % \
+              (mac[0:2],mac[2:4],mac[4:6],mac[6:8],mac[8:10],mac[10:12])
+    else:
+        mac = False
+    
+    return mac
+
 #def get_ipxe_configuration(mac, permission, host):
 #    ipxe = False
 #    path = False
@@ -439,12 +454,14 @@ def humanize_date_difference(now, otherdate=None, offset=None):
 #    return flask.render_template("index.html", title = "Overview", \
 #        active = "overview", unknown = unknown, known = known)
 
-@app.route("/configurations/")
-@app.route("/configurations")
-def configurations():
-    return flask.render_template("configurations.html", \
-        title = "Configurations", \
-        active = "configurations")
+@app.route("/configuration/")
+@app.route("/configuration")
+def configuration():
+    cfg = get_bootstrap_cfg()
+    return flask.render_template("configuration.html", \
+        cfg = cfg, \
+        title = "Configuration", \
+        active = "configuration")
 
 #@app.route("/domains/")
 #@app.route("/domains")
@@ -682,6 +699,7 @@ def get_bootstrap_cfg():
             if verify_mac(mac):
                 if not mac in data:
                     data[mac] = {}
+                    data[mac]['pretty'] = pretty_mac(mac)
     
                 for f in os.listdir(cache + "/" + mac):
                     path = cache + "/" + mac + "/" + f
