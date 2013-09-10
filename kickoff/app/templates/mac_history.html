@@ -1,0 +1,54 @@
+{% include "header.html" %}
+
+<h1>Boot history</h1>
+<p class="lead">This is the entire net boot history of the MAC address {{ mac }}.
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+     <th><span class="glyphicon glyphicon-time"></span></th>
+     <th>Timestamp</th>
+     <th>IP</th>
+     <th>DNS PTR</th>
+     <th>Served from</th>
+     <th>Status</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for i in history %}
+    <tr>
+      <td>
+        {{ i.age }}
+      </td><td>
+        {{ i.timestamp }}
+      </td><td>
+        {{ i.client }}
+      </td><td>
+        {% if i.client_ptr %}
+          {{ i.client_ptr }}
+        {% else %}
+          <span class="label label-info">Unable to lookup</span>
+        {% endif %}
+      </td><td>
+        {{ i.host }}
+      </td><td>
+        {{ i.status }}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<p class="text-center">
+  {% if previous_page %}
+    <a href="/boot-history?{% if status %}status={{ status }}&{% endif %}page={{ previous_page }}"><button type="button" class="btn btn-default">Page {{ previous_page }} ...</button></a>
+  {% endif %}
+  {% if previous_page or next_page %}
+    <a href="/boot-history?{% if status %}status={{ status }}&{% endif %}page={{ page }}"><button type="button" class="btn btn-primary disabled">Page {{ page }}</button></a>
+  {% endif %}
+  {% if next_page %}
+    <a href="/boot-history?{% if status %}status={{ status }}&{% endif %}page={{ next_page }}"><button type="button" class="btn btn-default">Page {{ next_page }} ...</button></a>
+  {% endif %}
+</p>
+
+{% include "footer.html" %}

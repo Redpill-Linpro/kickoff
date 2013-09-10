@@ -29,7 +29,7 @@ def dt_to_timestamp(dt):
 
 # Convert from timestamp to datetime object
 def timestamp_to_dt(timestamp):
-    t = datetime.datetime.strptime(str(timestamp), '%Y%m%d%H%M%S')
+    t = datetime.datetime.strptime(str(timestamp.strip("[").split(" ")[0]), '%d/%b/%Y:%H:%M:%S')
     return t
 
 def dbopen(collection):
@@ -408,10 +408,11 @@ def humanize_date_difference(now, otherdate=None, offset=None):
         return "%ds" % delta_s
 
 def is_boot_request(request):
-    r = re.compile('^GET\s+\/bootstrap\/[A-Fa-f0-9]{12}\/ipxe\s+HTTP\/[0-9]+\.[0-9]+$')
+    r = re.compile('^GET\s+\/bootstrap\/([A-Fa-f0-9]{12})\/ipxe\s+HTTP\/[0-9]+\.[0-9]+$')
     m = r.match(request)
     if m:
-        return True
+        mac = m.group(1)
+        return mac
     else:
         return False
 
@@ -434,7 +435,8 @@ def log_data_exists(checksum):
 
 def process_log_data(data,checksum,host):
     request = data['%r']
-    if is_boot_request(request):
+    mac = is_boot_request(request)
+    if mac:
         if not log_data_exists(checksum):
             
             l = {}
@@ -444,20 +446,48 @@ def process_log_data(data,checksum,host):
             l['status'] = data['%>s']
             l['byte'] = data['%b']
             l['client'] = data['%h']
+            l['client_ptr'] = get_reverse_address(l['client'])
             l['timestamp'] = data['%t']
-            l['user-agent'] = data['%{User-Agent}i']
+            l['useragent'] = data['%{User-Agent}i']
             l['referer'] = data['%{Referer}i']
+            l['mac'] = clean_mac(mac)
             col = dbopen('log')
             try:
                 col.insert(l)
             except:
                 print "Unable to insert log data"
+                return False
+            else:
+                return True
 
     return 
     #ref = data['%{Referer}i']
     #byte = data['%b']
     #code = data['%b']
     #code = data['%b']
+
+def get_boot_requests(mac, first = 0, limit = False, status = []):
+    res = []
+    now = datetime.datetime.now()
+    col = dbopen('log')
+    try:
+        q = {}
+        if mac:
+            q['mac'] = mac
+
+        cursor = col.find(q)
+    except:
+        print "Unable to get boot requests %s" % (q)
+    else:
+        for i in cursor:
+            dt = timestamp_to_dt(i['timestamp'])
+            i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
+            i['age'] = humanize_date_difference(dt,now)
+            res.append(i)
+
+
+    res = sorted(res, key=lambda x: x['epoch'], reverse = True)
+    return res
 
 #def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
 #    res = []
@@ -527,13 +557,13 @@ def process_log_data(data,checksum,host):
 #            group = res.group(1)
 #
 #    return group
-#
-#def get_reverse_address(ip):
-#    try:
-#        reverse = socket.gethostbyaddr(ip)[0]
-#    except:
-#        reverse = False
-#    return reverse
+
+def get_reverse_address(ip):
+    try:
+        reverse = socket.gethostbyaddr(ip)[0]
+    except:
+        reverse = False
+    return reverse
 
 
 #@app.route("/")
@@ -579,13 +609,14 @@ def maintenance():
                     except:
                         out['errors'].append("Unable to open %s for reading" % path)
                     else:
-                        try:
-                            stat = os.stat(path)
-                        except:
-                            out['errors'].append("Unable to stat %s" % path)
-                        else:
-                            meta['mtime'] = stat.st_mtime
-                            meta['size'] = stat.st_size
+                        meta['new_entries'] = 0
+                        #try:
+                        #    stat = os.stat(path)
+                        #except:
+                        #    out['errors'].append("Unable to stat %s" % path)
+                        #else:
+                        #    meta['mtime'] = stat.st_mtime
+                        #    meta['size'] = stat.st_size
 
                         for line in fp:
                             try:
@@ -596,7 +627,9 @@ def maintenance():
                                 checksum = hashlib.sha1()
                                 checksum.update(line)
 
-                                process_log_data(data,checksum.hexdigest(),h)
+                                s=process_log_data(data,checksum.hexdigest(),h)
+                                if s:
+                                    meta['new_entries'] += 1
 
                     out[h][f] = meta
 
@@ -731,13 +764,16 @@ def mac_configuration(mac):
         title = "%s configuration" % mac, mac = mac, \
         active = "configuration", cfg = cfg, boot = boot)
 
-#@app.route("/mac/<mac>/history")
-#def mac_history(mac):
-#    mac = clean_mac(mac)
-#    if not mac:
-#        return flask.make_response("The given mac address is not valid", 400)
-#
-#    return flask.redirect('/boot-history?mac=%s' % mac)
+@app.route("/mac/<mac>/history")
+def mac_history(mac):
+    mac = clean_mac(mac)
+    history = get_boot_requests(mac)
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    return flask.render_template("mac_history.html", \
+        title = "%s boot history" % mac, mac = mac, \
+        active = "history", history = history)
 
 @app.route("/about/")
 @app.route("/about")
