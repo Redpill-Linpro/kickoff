@@ -438,7 +438,6 @@ def process_log_data(data,checksum,host):
     mac = is_boot_request(request)
     if mac:
         if not log_data_exists(checksum):
-            
             l = {}
             l['_id'] = checksum
             l['host'] = host
@@ -446,7 +445,11 @@ def process_log_data(data,checksum,host):
             l['status'] = data['%>s']
             l['byte'] = data['%b']
             l['client'] = data['%h']
-            l['client_ptr'] = get_reverse_address(l['client'])
+            fqdn = get_reverse_address(l['client'])
+            if fqdn:
+                l['client_ptr'] = fqdn
+                l['domain'] = extract_domain_from_fqdn(fqdn)
+
             l['timestamp'] = data['%t']
             l['useragent'] = data['%{User-Agent}i']
             l['referer'] = data['%{Referer}i']
@@ -549,18 +552,18 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
 #                break
 #
 #    return res
-#
-## Use the DNS PTR to create logical groups of nodes. This method converts fqdn
-## to group name.
-#def extract_domain_from_fqdn(fqdn):
-#    group = False
-#    rule = re.compile('^[^\.]+\.(.*)')
-#    res = rule.search(fqdn)
-#    if res:
-#        if res.group(1):
-#            group = res.group(1)
-#
-#    return group
+
+# Use the DNS PTR to create logical groups of nodes. This method converts fqdn
+# to group name.
+def extract_domain_from_fqdn(fqdn):
+    group = False
+    rule = re.compile('^[^\.]+\.(.*)')
+    res = rule.search(fqdn)
+    if res:
+        if res.group(1):
+            group = res.group(1)
+
+    return group
 
 def get_reverse_address(ip):
     try:
@@ -609,6 +612,7 @@ def hosts():
         {'id': 'pretty',        'pretty': 'MAC'},
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'timestamp',     'pretty': 'Timestamp'},
+        {'id': 'domain',        'pretty': 'Domain'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
@@ -809,9 +813,11 @@ def mac_history(mac):
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'timestamp',     'pretty': 'Timestamp'},
+        {'id': 'domain',        'pretty': 'Domain'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
+        {'id': 'status',        'pretty': 'HTTP status'},
     ]
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)

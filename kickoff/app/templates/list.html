@@ -18,9 +18,13 @@
             {% if h.id in e %}
               {% if h.id == 'pretty' %}
                 <a href="/mac/{{ e['mac'] }}/configuration">
+              {% elif h.id == 'domain' %}
+                <a href="/domain/{{ e[h.id] }}">
               {% endif %}
               {{ e[h.id] }}
               {% if h.id == 'pretty' %}
+                </a>
+              {% elif h.id == 'domain' %}
                 </a>
               {% endif %}
             {% endif %}
