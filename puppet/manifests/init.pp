@@ -1,5 +1,6 @@
 $packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim', 
-              'uwsgi-plugin-http', 'curl', 'python-dulwich' ]
+              'uwsgi-plugin-http', 'curl', 'python-dulwich',
+              'mongodb' ]
 package {
     $packages: ensure => installed;
 }
@@ -42,6 +43,7 @@ Service {
 
 service {
     'nginx': ;
+    'mongodb': ;
     'uwsgi': 
         require => [File['/etc/uwsgi/apps-enabled/kickoff.yaml'],
                     File['/srv/www/kickoff']];
