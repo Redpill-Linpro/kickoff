@@ -1,9 +1,10 @@
 {% include "header.html" %}
 
 <h1>Domain {{ domain }}</h1>
+<p class="lead">This list shows the last boot request for all the hosts in the domain {{ domain }}.</p>
 
 <div class="row">
-  <div class="md-col-12">
+  <div class="col-md-12">
     {% include "list.html" %}
   </div>
 </div>
