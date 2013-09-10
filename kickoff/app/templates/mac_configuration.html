@@ -2,16 +2,20 @@
 
 {% include "mac_menu.html" %}
 
-
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-12">
     <h2>Configuration</h2>
-    <!-- {{ host }} -->
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="lead">Current iPXE configuration</div>
+    {% if cfg[mac].ipxe %}
+      <pre>{{ cfg[mac].ipxe }}</pre>
+    {% else %}
+      <p class="lead">None found</p>
+    {% endif %}
   </div>
 </div>
 
-<!--
-<hr/>
-
-<p>Configuration saved at {{ host['registered'] }}.</p>
--->
+{% include "footer.html" %}

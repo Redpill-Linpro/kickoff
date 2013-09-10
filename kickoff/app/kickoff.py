@@ -6,6 +6,8 @@ import cgi
 import flask
 import socket
 import datetime
+import apachelog
+import pymongo
 import hashlib
 import json
 import gitsh
@@ -29,6 +31,41 @@ def dt_to_timestamp(dt):
 def timestamp_to_dt(timestamp):
     t = datetime.datetime.strptime(str(timestamp), '%Y%m%d%H%M%S')
     return t
+
+def dbopen(collection):
+    dbhost = app.config['DBHOST']
+    dbport = app.config['DBPORT']
+    db = app.config['DBNAME']
+
+    # Connect to mongodb
+    try:
+        connection = pymongo.Connection(dbhost,dbport)
+
+    except:
+        print "Unable to connect to database server " \
+              "at %s:%s" % (dbhost,dbport)
+        return False
+
+    # Select database
+    try:
+        database = connection[db]
+
+    except:
+        print "ERROR: Unable to select to database %s " \
+              "at %s:%s" % (db,dbhost,dbport)
+        return False
+
+    # Select collection
+    try:
+        col = database[collection]
+
+    except:
+        print "ERROR: Unable to select to collection %s " \
+              "in database at %s:%s" % (collection,db,dbhost,dbport)
+        return False
+
+    # Return collection handler
+    return col
 
 #def get_vendor(mac):
 #    path = '/vagrant/kickoff/conf/oui.txt'
@@ -370,6 +407,58 @@ def humanize_date_difference(now, otherdate=None, offset=None):
     else:
         return "%ds" % delta_s
 
+def is_boot_request(request):
+    r = re.compile('^GET\s+\/bootstrap\/[A-Fa-f0-9]{12}\/ipxe\s+HTTP\/[0-9]+\.[0-9]+$')
+    m = r.match(request)
+    if m:
+        return True
+    else:
+        return False
+
+def log_data_exists(checksum):
+    col = dbopen('log')
+
+    q = {}
+    q['_id'] = checksum
+    try:
+        count = col.find(q).count()
+
+    except:
+        print "Unable to execute find query %s" % q
+
+    else:
+        if count > 0:
+            return True
+
+    return False
+
+def process_log_data(data,checksum,host):
+    request = data['%r']
+    if is_boot_request(request):
+        if not log_data_exists(checksum):
+            
+            l = {}
+            l['_id'] = checksum
+            l['host'] = host
+            l['request'] = request
+            l['status'] = data['%>s']
+            l['byte'] = data['%b']
+            l['client'] = data['%h']
+            l['timestamp'] = data['%t']
+            l['user-agent'] = data['%{User-Agent}i']
+            l['referer'] = data['%{Referer}i']
+            col = dbopen('log')
+            try:
+                col.insert(l)
+            except:
+                print "Unable to insert log data"
+
+    return 
+    #ref = data['%{Referer}i']
+    #byte = data['%b']
+    #code = data['%b']
+    #code = data['%b']
+
 #def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
 #    res = []
 #
@@ -454,14 +543,70 @@ def humanize_date_difference(now, otherdate=None, offset=None):
 #    return flask.render_template("index.html", title = "Overview", \
 #        active = "overview", unknown = unknown, known = known)
 
-@app.route("/configuration/")
-@app.route("/configuration")
-def configuration():
+@app.route("/hosts/")
+@app.route("/hosts")
+def hosts():
     cfg = get_bootstrap_cfg()
-    return flask.render_template("configuration.html", \
+    return flask.render_template("hosts.html", \
         cfg = cfg, \
-        title = "Configuration", \
-        active = "configuration")
+        title = "Hosts", \
+        active = "hosts")
+
+@app.route("/maintenance/")
+@app.route("/maintenance")
+def maintenance():
+    logdir = app.config['REPLICA_LOG_DIR']
+    log_format = app.config['REPLICA_LOG_FORMAT']
+
+    if not os.path.isdir(logdir):
+        return flask.make_response("The path %s is not a directory" % logdir, 500)
+
+    p = apachelog.parser(log_format)
+    out = {}
+    out['errors'] = []
+    for h in os.listdir(logdir):
+        path = "%s/%s" % (logdir,h)
+        if os.path.isdir(path):
+            if not h in out:
+                out[h] = {}
+
+            for f in os.listdir(path):
+                path = "%s/%s/%s" % (logdir,h,f)
+                if os.path.isfile(path):
+                    meta = {}
+                    try:
+                        fp = open(path,'r')
+                    except:
+                        out['errors'].append("Unable to open %s for reading" % path)
+                    else:
+                        try:
+                            stat = os.stat(path)
+                        except:
+                            out['errors'].append("Unable to stat %s" % path)
+                        else:
+                            meta['mtime'] = stat.st_mtime
+                            meta['size'] = stat.st_size
+
+                        for line in fp:
+                            try:
+                                data = p.parse(line)
+                            except:
+                                out['errors'].append("Unable to parse line [%s] in file %s" % (line,path))
+                            else:
+                                checksum = hashlib.sha1()
+                                checksum.update(line)
+
+                                process_log_data(data,checksum.hexdigest(),h)
+
+                    out[h][f] = meta
+
+    # Remove the error list if it's empty
+    if len(out['errors']) == 0:
+        del(out['errors'])
+    
+    response = flask.make_response(json.dumps(out, indent=2))
+    response.headers['cache-control'] = 'max-age=0, must-revalidate'
+    return response
 
 #@app.route("/domains/")
 #@app.route("/domains")
@@ -555,58 +700,37 @@ def configuration():
 #def mac(mac):
 #    return flask.redirect('/mac/%s/history' % mac)
 #
-#@app.route("/mac/<mac>/security", methods = ['GET', 'POST'])
-#def mac_security(mac):
-#    mac = clean_mac(mac)
-#    
-#    if not mac:
-#        return flask.make_response("The given mac address is not valid", 400)
-#
-#    boot = get_last_boot_requests(limit = 1, mac = mac)
-#
-#    if flask.request.method == 'POST':
-#        try:
-#            do = flask.request.form['do']
-#        except:
-#            pass
-#        else:
-#            host = get_host_configuration(mac)
-#            if len(boot) == 1:
-#                if do == "unlock-ip-filter":
-#                    del(host['remote_addr'])
-#                elif do == "unlock-uuid-filter":
-#                    del(host['uuid'])
-#                elif do == "unlock-hostname-filter":
-#                    del(host['hostname'])
-#                if do == "lock-ip-filter":
-#                    host['remote_addr'] = boot[0]['remote_addr']
-#                elif do == "lock-uuid-filter":
-#                    host['uuid'] = boot[0]['uuid']
-#                elif do == "lock-hostname-filter":
-#                    host['hostname'] = boot[0]['hostname']
-#    
-#            save_host(mac, host)
-#
-#    host = get_host_configuration(mac)
-#
-#    return flask.render_template("mac_security.html", \
-#        title = "%s security" % mac, mac = mac, \
-#        active = "security", host = host, boot = boot)
-#
-#@app.route("/mac/<mac>/configuration")
-#def mac_configuration(mac):
-#    mac = clean_mac(mac)
-#
-#    if not mac:
-#        return flask.make_response("The given mac address is not valid", 400)
-#
-#    boot = get_last_boot_requests(limit = 1, mac = mac)
-#    host = get_host_configuration(mac)
-#
-#    return flask.render_template("mac_configuration.html", \
-#        title = "%s configuration" % mac, mac = mac, \
-#        active = "configuration", host = host, boot = boot)
-#
+@app.route("/mac/<mac>/security", methods = ['GET', 'POST'])
+def mac_security(mac):
+    mac = clean_mac(mac)
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    #boot = get_last_boot_requests(limit = 1, mac = mac)
+    boot = {}
+    cfg = get_bootstrap_cfg(mac)
+
+    return flask.render_template("mac_security.html", \
+        title = "%s security" % mac, mac = mac, \
+        active = "security", cfg = cfg, boot = boot)
+    mac = clean_mac(mac)
+    
+@app.route("/mac/<mac>/configuration")
+def mac_configuration(mac):
+    mac = clean_mac(mac)
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    #boot = get_last_boot_requests(limit = 1, mac = mac)
+    boot = {}
+    cfg = get_bootstrap_cfg(mac)
+
+    return flask.render_template("mac_configuration.html", \
+        title = "%s configuration" % mac, mac = mac, \
+        active = "configuration", cfg = cfg, boot = boot)
+
 #@app.route("/mac/<mac>/history")
 #def mac_history(mac):
 #    mac = clean_mac(mac)
@@ -681,9 +805,13 @@ def read_file(path):
 
     return contents
 
-def get_bootstrap_cfg():
+def get_bootstrap_cfg(mac = False):
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
+
+    if mac:
+        if not verify_mac(mac):
+            mac = False
 
     repo = gitsh.gitsh(repository, cache, True)
     if os.path.isdir(cache):
@@ -692,23 +820,26 @@ def get_bootstrap_cfg():
         repo.clone()
 
     data = {}
-    for d in os.listdir(cache):
-        path = cache + "/" + d
+    for m in os.listdir(cache):
+        path = cache + "/" + m
         if os.path.isdir(path):
-            mac = d
-            if verify_mac(mac):
-                if not mac in data:
-                    data[mac] = {}
-                    data[mac]['pretty'] = pretty_mac(mac)
+            if verify_mac(m):
+                if mac:
+                    if mac != m:
+                        continue
+
+                if not m in data:
+                    data[m] = {}
+                    data[m]['pretty'] = pretty_mac(m)
     
-                for f in os.listdir(cache + "/" + mac):
-                    path = cache + "/" + mac + "/" + f
+                for f in os.listdir(cache + "/" + m):
+                    path = cache + "/" + m + "/" + f
                     if os.path.isfile(path):
-                        if f == 'index.ipxe':
-                            data[mac]['ipxe'] = read_file(path)
+                        if f == 'ipxe':
+                            data[m]['ipxe'] = read_file(path)
             
                         elif f == '.htaccess':
-                            data[mac]['htaccess'] = read_file(path)
+                            data[m]['htaccess'] = read_file(path)
         
     return data
 

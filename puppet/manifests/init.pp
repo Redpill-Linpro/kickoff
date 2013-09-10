@@ -1,6 +1,7 @@
 $packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim', 
               'uwsgi-plugin-http', 'curl', 'python-dulwich',
-              'mongodb' ]
+              'mongodb', 'python-pymongo', 'language-pack-nb-base',
+              'language-pack-nb', 'language-pack-kde-nb-base' ]
 package {
     $packages: ensure => installed;
 }

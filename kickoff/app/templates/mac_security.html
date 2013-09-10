@@ -2,136 +2,20 @@
 
 {% include "mac_menu.html" %}
 
-<!-- {{ boot }} -->
-
-<h2>Security filters</h2>
-<p class="lead">
-  The basic security feature is to allow requests from the same IP address and with the same UUID string as in the initial boot request only. If the SMBIOS UUID or the IP address is changed during the lifecycle of the host, update the filters below to allow continued access.
-</p>
-
 <div class="row">
-  <div class="col-md-7">
-    <table class="table table-bordered table-hover">
-      <tbody>
-        <tr>
-          {% if host.remote_addr %}
-            <td class="success">
-              IP filter enabled. Allow requests from <strong>{{ host.remote_addr }}</strong> only.
-              {% if host.reverse %}
-                ({{ host.reverse }})
-              {% endif %}
-              <form rel="tooltip" title="Unlock filter" action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="unlock-ip-filter"/>
-                <button type="submit">
-                  <span class="glyphicon glyphicon-remove"></span>
-                </button>
-              </form>
-            </td>
-          {% else %}
-            <td class="danger">
-              IP filter disabled. Allow requests from all IP addresses.
-              <form rel="tooltip" title="Lock to {{ boot.0.remote_addr }}" action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="lock-ip-filter"/>
-                <button type="submit">
-                  <span class="glyphicon glyphicon-lock"></span>
-                </button>
-              </form>
-            </td>
-          {% endif %}
-        </tr>
-        <tr>
-          {% if host.hostname %}
-            <td class="success">
-              Hostname filter enabled. Accept requests with hostname <strong>{{ host.hostname }}</strong> only.
-              <form rel="tooltip" title="Unlock filter" action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="unlock-hostname-filter"/>
-                <button type="submit">
-                  <span class="glyphicon glyphicon-remove"></span>
-                </button>
-              </form>
-            </td>
-          {% else %}
-            {% if host.hostname == None %}
-              <td class="success">
-                Hostname filter enabled. Accept requests <strong>without hostname</strong> only.
-                <form rel="tooltip" title="Unlock filter" action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="unlock-hostname-filter"/>
-                  <button type="submit">
-                    <span class="glyphicon glyphicon-remove"></span>
-                  </button>
-                </form>
-              </td>
-            {% else %}
-              <td class="danger">
-                Hostname filter disabled. Allow requests from all hostnames.
-                {% if boot.0.hostname == None %}
-                  <form rel="tooltip" title="Lock to no hostname" action="" method="POST" class="pull-right">
-                {% else %}
-                  <form rel="tooltip" title="Lock to hostname {{ boot.0.hostname }}" action="" method="POST" class="pull-right">
-                {% endif %}
-                  <input type="hidden" name="do" value="lock-hostname-filter"/>
-                  <button type="submit">
-                    <span class="glyphicon glyphicon-lock"></span>
-                  </button>
-                </form>
-              </td>
-            {% endif %}
-          {% endif %}
-        </tr>
-        <tr>
-          {% if host.uuid %}
-            <td class="success">
-              UUID filter enabled. Accept requests with SMBIOS UUID <strong>{{ host.uuid }}</strong>.
-              <form rel="tooltip" title="Unlock filter" action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="unlock-uuid-filter"/>
-                <button type="submit">
-                  <span class="glyphicon glyphicon-remove"></span>
-                </button>
-              </form>
-            </td>
-          {% else %}
-            {% if host.uuid == None %}
-              <td class="success">
-                UUID filter enabled. Accept requests <strong>without UUID</strong> only.
-                <form rel="tooltip" title="Unlock filter" action="" method="POST" class="pull-right">
-                <input type="hidden" name="do" value="unlock-uuid-filter"/>
-                  <button type="submit">
-                    <span class="glyphicon glyphicon-remove"></span>
-                  </button>
-                </form>
-              </td>
-            {% else %}
-              <td class="danger">
-                UUID filter disabled. Allow requests from all UUIDs.
-                {% if boot.0.uuid == None %}
-                  <form rel="tooltip" title="Lock to no UUID" action="" method="POST" class="pull-right">
-                {% else %}
-                  <form rel="tooltip" title="Lock to UUID {{ boot.0.uuid }}" action="" method="POST" class="pull-right">
-                {% endif %}
-                  <input type="hidden" name="do" value="lock-uuid-filter"/>
-                  <button type="submit">
-                      <span class="glyphicon glyphicon-lock"></span>
-                  </button>
-                </form>
-              </td>
-            {% endif %}
-          {% endif %}
-        </tr>
-      </tbody>
-    </table>
+  <div class="col-md-12">
+    <h2>Security</h2>
   </div>
-  <div class="col-md-5">
-    <div class="panel panel-default">
-      <div class="panel-heading">Important</div>
-      <div class="panel-body">
-        The values preset for the filter have been read from the <a href="/mac/{{ mac }}/history">last boot request</a> to this MAC address. Please make sure that the valid host was used before locking down the configuration.
-      </div>
-    </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <div class="lead">Current htaccess configuration</div>
+    {% if cfg[mac].htaccess %}
+      <pre>{{ cfg[mac].htaccess }}</pre>
+    {% else %}
+      <p class="lead">None found</p>
+    {% endif %}
   </div>
 </div>
 
-<!--
-<hr/>
-
-<p>Configuration saved at {{ host['registered'] }}.</p>
--->
+{% include "footer.html" %}
