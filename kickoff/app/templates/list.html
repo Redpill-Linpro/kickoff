@@ -1,0 +1,33 @@
+<table class="table table-hover">
+  <thead>
+    {% for h in headings %}
+      <th>
+        {% if h.id == 'age' %}
+          <span class="glyphicon glyphicon-time"></span>
+        {% else %}
+          {{ h.pretty }}
+        {% endif %}
+      </th>
+    {% endfor %}
+  </thead>
+  <tbody>
+    {% for e in entries %}
+      <tr>
+        {% for h in headings %}
+          <td>
+            {% if h.id in e %}
+              {% if h.id == 'pretty' %}
+                <a href="/mac/{{ e['mac'] }}/configuration">
+              {% endif %}
+              {{ e[h.id] }}
+              {% if h.id == 'pretty' %}
+                </a>
+              {% endif %}
+            {% endif %}
+          </td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+

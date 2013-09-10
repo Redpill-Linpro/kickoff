@@ -466,7 +466,7 @@ def process_log_data(data,checksum,host):
     #code = data['%b']
     #code = data['%b']
 
-def get_boot_requests(mac, first = 0, limit = False, status = []):
+def get_boot_requests(mac = False, first = 0, limit = False, status = []):
     res = []
     now = datetime.datetime.now()
     col = dbopen('log')
@@ -475,7 +475,10 @@ def get_boot_requests(mac, first = 0, limit = False, status = []):
         if mac:
             q['mac'] = mac
 
-        cursor = col.find(q)
+        if limit:
+            cursor = col.find(q, limit=limit)
+        else:
+            cursor = col.find(q)
     except:
         print "Unable to get boot requests %s" % (q)
     else:
@@ -483,6 +486,7 @@ def get_boot_requests(mac, first = 0, limit = False, status = []):
             dt = timestamp_to_dt(i['timestamp'])
             i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
             i['age'] = humanize_date_difference(dt,now)
+            i['pretty'] = pretty_mac(i['mac'])
             res.append(i)
 
 
@@ -577,8 +581,42 @@ def get_reverse_address(ip):
 @app.route("/hosts")
 def hosts():
     cfg = get_bootstrap_cfg()
+    history = get_boot_requests()
+    data = {}
+    for i in history:
+        mac = i['mac']
+
+        if not mac in data:
+            data[mac] = i
+
+    for mac in cfg:
+        if mac in data:
+            data[mac] = dict(data[mac], **cfg[mac])
+        else:
+            data[mac] = cfg[mac]
+            data[mac]['mac'] = mac
+
+    hosts = []
+    for mac in data:
+        # To enable sorting
+        if not 'epoch' in data[mac]:
+            data[mac]['epoch'] = -1
+
+        hosts.append(data[mac])
+
+    hosts = sorted(hosts, key=lambda x: x['epoch'], reverse = True)
+    headings = [
+        {'id': 'pretty',        'pretty': 'MAC'},
+        {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'timestamp',     'pretty': 'Timestamp'},
+        {'id': 'client_ptr',    'pretty': 'DNS PTR'},
+        {'id': 'client',        'pretty': 'IP'},
+        {'id': 'host',          'pretty': 'Served by'},
+    ]
+
     return flask.render_template("hosts.html", \
-        cfg = cfg, \
+        entries = hosts, \
+        headings = headings, \
         title = "Hosts", \
         active = "hosts")
 
@@ -768,12 +806,19 @@ def mac_configuration(mac):
 def mac_history(mac):
     mac = clean_mac(mac)
     history = get_boot_requests(mac)
+    headings = [
+        {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'timestamp',     'pretty': 'Timestamp'},
+        {'id': 'client_ptr',    'pretty': 'DNS PTR'},
+        {'id': 'client',        'pretty': 'IP'},
+        {'id': 'host',          'pretty': 'Served by'},
+    ]
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
     return flask.render_template("mac_history.html", \
         title = "%s boot history" % mac, mac = mac, \
-        active = "history", history = history)
+        active = "history", entries = history, headings = headings)
 
 @app.route("/about/")
 @app.route("/about")
@@ -851,7 +896,8 @@ def get_bootstrap_cfg(mac = False):
 
     repo = gitsh.gitsh(repository, cache, True)
     if os.path.isdir(cache):
-        repo.pull()
+        #repo.pull()
+        pass
     else:
         repo.clone()
 
