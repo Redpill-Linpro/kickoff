@@ -490,6 +490,7 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
             i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
             i['age'] = humanize_date_difference(dt,now)
             i['pretty_mac'] = pretty_mac(i['mac'])
+            i['status'] = int(i['status'])
             res.append(i)
 
 
@@ -616,6 +617,7 @@ def hosts():
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
+        {'id': 'status',        'pretty': 'HTTP status'},
     ]
 
     return flask.render_template("hosts.html", \

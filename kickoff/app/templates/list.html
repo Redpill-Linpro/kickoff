@@ -12,12 +12,22 @@
   </thead>
   <tbody>
     {% for e in entries %}
-      <tr>
+      {% if 'status' in e %}
+        {% if e.status == 200 %}
+          <tr class="success">
+        {% elif e.status == 403 %}
+          <tr class="danger">
+        {% else %}
+          <tr>
+        {% endif %}
+      {% else %}
+        <tr>
+      {% endif %}
         {% for h in headings %}
           <td>
             {% if h.id in e %}
               {% if h.id == 'pretty_mac' %}
-                <a href="/mac/{{ e['mac'] }}/configuration">
+                <a href="/mac/{{ e['mac'] }}/history">
               {% elif h.id == 'domain' %}
                 <a href="/domain/{{ e[h.id] }}">
               {% endif %}
