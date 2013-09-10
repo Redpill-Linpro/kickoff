@@ -159,15 +159,15 @@ def dbopen(collection):
 #                (filepath, linkpath)
 #
 #    return status
-#
-## Input validation for domains
-#def clean_domain(domain):
-#    f = re.compile('[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*')
-#    m = f.match(domain)
-#    if not m:
-#       domain = False
-#
-#    return domain
+
+# Input validation for domains
+def clean_domain(domain):
+    f = re.compile('[a-zA-Z\d-]{,63}(\.[a-zA-Z\d-]{,63})*')
+    m = f.match(domain)
+    if not m:
+       domain = False
+
+    return domain
 
 def verify_mac(mac):
     macfilter = re.compile('^[a-f0-9]{12}$')
@@ -489,7 +489,7 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
             dt = timestamp_to_dt(i['timestamp'])
             i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
             i['age'] = humanize_date_difference(dt,now)
-            i['pretty'] = pretty_mac(i['mac'])
+            i['pretty_mac'] = pretty_mac(i['mac'])
             res.append(i)
 
 
@@ -609,7 +609,7 @@ def hosts():
 
     hosts = sorted(hosts, key=lambda x: x['epoch'], reverse = True)
     headings = [
-        {'id': 'pretty',        'pretty': 'MAC'},
+        {'id': 'pretty_mac',    'pretty': 'MAC'},
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'timestamp',     'pretty': 'Timestamp'},
         {'id': 'domain',        'pretty': 'Domain'},
@@ -700,6 +700,7 @@ def domains():
     headings = [
         {'id': 'domain',        'pretty': 'Domain'},
         {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'pretty_mac',    'pretty': 'MAC'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
@@ -710,30 +711,39 @@ def domains():
     return flask.render_template("domains.html", title = "Domains", \
         active = "domains", entries = domains, headings = headings)
 
-#@app.route("/domain/<domain>")
-#def domain(domain):
-#    domain = clean_domain(domain)
-#    if not domain:
-#        return flask.make_response("The given domain is not valid", 400)
-#
-#    macs = get_all_mac_addresses()
-#    hosts = []
-#    for mac in macs:
-#        reverse = False
-#        boot = get_last_boot_requests(limit = 1, mac = mac)
-#        if len(boot) == 1:
-#            if 'reverse' in boot[0]:
-#                reverse = boot[0]['reverse']
-#                this_domain = extract_domain_from_fqdn(reverse)
-#                if this_domain == domain:
-#                    boot = get_last_boot_requests(limit = 1, mac = mac)
-#                    if len(boot) == 1:
-#                        data = boot[0]
-#                        hosts.append(data)
-#
-#    return flask.render_template("domain.html", title = "Domain %s" % domain, \
-#        active = "domain", hosts = hosts, domain = domain)
-#
+@app.route("/domain/<domain>")
+def domain(domain):
+    domain = clean_domain(domain)
+    if not domain:
+        return flask.make_response("The given domain is not valid", 400)
+
+    history = get_boot_requests()
+    data = {}
+    for i in history:
+        if not i['mac'] in data:
+            data[i['mac']] = i
+
+    hosts = []
+    for mac in data:
+        if 'domain' in data[mac]:
+            if data[mac]['domain'] == domain:
+                hosts.append(data[mac])
+
+    headings = [
+        {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'pretty_mac',    'pretty': 'MAC'},
+        {'id': 'client_ptr',    'pretty': 'DNS PTR'},
+        {'id': 'client',        'pretty': 'IP'},
+        {'id': 'host',          'pretty': 'Served by'},
+        {'id': 'status',        'pretty': 'HTTP status'},
+        {'id': 'ipxe',          'pretty': 'iPXE'},
+    ]
+
+    hosts = sorted(hosts, key=lambda x: x['epoch'], reverse = True)
+    return flask.render_template("domain.html", title = "Domain %s" % domain, \
+        active = "domain", entries = hosts, headings = headings, \
+        domain = domain)
+
 #@app.route("/boot-history/")
 #@app.route("/boot-history")
 #def boot_history():
@@ -924,7 +934,7 @@ def get_bootstrap_cfg(mac = False):
 
                 if not m in data:
                     data[m] = {}
-                    data[m]['pretty'] = pretty_mac(m)
+                    data[m]['pretty_mac'] = pretty_mac(m)
     
                 for f in os.listdir(cache + "/" + m):
                     path = cache + "/" + m + "/" + f
