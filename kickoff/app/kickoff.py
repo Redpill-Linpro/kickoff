@@ -683,27 +683,33 @@ def maintenance():
     response.headers['cache-control'] = 'max-age=0, must-revalidate'
     return response
 
-#@app.route("/domains/")
-#@app.route("/domains")
-#def domains():
-#    macs = get_all_mac_addresses()
-#    domains = {}
-#    for mac in macs:
-#        reverse = False
-#        boot = get_last_boot_requests(limit = 1, mac = mac)
-#        if len(boot) == 1:
-#            if 'reverse' in boot[0]:
-#                reverse = boot[0]['reverse']
-#                domain = extract_domain_from_fqdn(reverse)
-#                if domain:
-#                    if not domain in domains:
-#                        domains[domain] = 1
-#                    else:
-#                        domains[domain] += 1
-#
-#    return flask.render_template("domains.html", title = "Domains", \
-#        active = "domains", domains = domains)
-#
+@app.route("/domains/")
+@app.route("/domains")
+def domains():
+    history = get_boot_requests()
+    data = {}
+    for i in history:
+        if not i['mac'] in data:
+            data[i['mac']] = i
+
+    domains = []
+    for mac in data:
+        if 'domain' in data[mac]:
+            domains.append(data[mac])
+
+    headings = [
+        {'id': 'domain',        'pretty': 'Domain'},
+        {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'client_ptr',    'pretty': 'DNS PTR'},
+        {'id': 'client',        'pretty': 'IP'},
+        {'id': 'host',          'pretty': 'Served by'},
+        {'id': 'status',        'pretty': 'HTTP status'},
+    ]
+
+    domains = sorted(domains, key=lambda x: x['epoch'], reverse = True)
+    return flask.render_template("domains.html", title = "Domains", \
+        active = "domains", entries = domains, headings = headings)
+
 #@app.route("/domain/<domain>")
 #def domain(domain):
 #    domain = clean_domain(domain)
