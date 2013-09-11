@@ -28,14 +28,20 @@
             {% if h.id in e %}
               {% if h.id == 'pretty_mac' %}
                 <a href="/mac/{{ e['mac'] }}/history">
+                  {{ e[h.id] }}
+                </a>
               {% elif h.id == 'domain' %}
                 <a href="/domain/{{ e[h.id] }}">
-              {% endif %}
-              {{ e[h.id] }}
-              {% if h.id == 'pretty_mac' %}
+                  {{ e[h.id] }}
                 </a>
-              {% elif h.id == 'domain' %}
-                </a>
+              {% elif h.id == 'status' %}
+                {% if e[h.id] == 404 %}
+                  <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-eye-open"></span>
+                {% elif e[h.id] == 403 %}
+                  <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-ban-circle"></span>
+                {% endif %}
+              {% else %}
+                {{ e[h.id] }}
               {% endif %}
             {% endif %}
           </td>
