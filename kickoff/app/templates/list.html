@@ -27,7 +27,7 @@
           <td>
             {% if h.id in e %}
               {% if h.id == 'pretty_mac' %}
-                <a href="/mac/{{ e['mac'] }}/history">
+                <a rel="tooltip" title="{% if e['vendor'] %}{{ e['vendor'] }}{% else %}Unknown vendor{% endif %}" href="/mac/{{ e['mac'] }}/history">
                   {{ e[h.id] }}
                 </a>
               {% elif h.id == 'domain' %}
@@ -39,6 +39,8 @@
                   <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-eye-open"></span>
                 {% elif e[h.id] == 403 %}
                   <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-ban-circle"></span>
+                {% else %}
+                  {{ e[h.id] }}
                 {% endif %}
               {% else %}
                 {{ e[h.id] }}

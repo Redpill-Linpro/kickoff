@@ -32,6 +32,10 @@ def timestamp_to_dt(timestamp):
     t = datetime.datetime.strptime(str(timestamp.strip("[").split(" ")[0]), '%d/%b/%Y:%H:%M:%S')
     return t
 
+def epoch_to_dt(epoch):
+    t = datetime.datetime.utcfromtimestamp(int(epoch))
+    return t
+
 def dbopen(collection):
     dbhost = app.config['DBHOST']
     dbport = app.config['DBPORT']
@@ -72,6 +76,9 @@ def get_vendor(mac):
     vendor = False
     if not os.path.isfile(path):
         return False
+
+    # Need dashes as part of the address
+    mac = pretty_mac(mac)
 
     needle = mac[0:8].upper()
     r = re.compile('^\s+%s\s+\(hex\)\s+(.*)' % needle)
@@ -438,37 +445,38 @@ def process_log_data(data,checksum,host):
     mac = is_boot_request(request)
     if mac:
         if not log_data_exists(checksum):
-            l = {}
-            l['_id'] = checksum
-            l['host'] = host
-            l['request'] = request
-            l['status'] = data['%>s']
-            l['byte'] = data['%b']
-            l['client'] = data['%h']
+            i = {}
+            i['_id'] = checksum
+            i['host'] = host
+            i['request'] = request
+            i['status'] = int(data['%>s'])
+            i['byte'] = data['%b']
+            i['client'] = data['%h']
 
-            fqdn = get_reverse_address(l['client'])
-            if fqdn:
-                l['client_ptr'] = fqdn
-                l['domain'] = extract_domain_from_fqdn(fqdn)
+            i['timestamp'] = data['%t']
+            i['useragent'] = data['%{User-Agent}i']
+            i['referer'] = data['%{Referer}i']
+            i['mac'] = clean_mac(mac)
 
-            l['timestamp'] = data['%t']
-            l['useragent'] = data['%{User-Agent}i']
-            l['referer'] = data['%{Referer}i']
-            l['mac'] = clean_mac(mac)
-            col = dbopen('log')
-            try:
-                col.insert(l)
-            except:
-                print "Unable to insert log data"
-                return False
-            else:
-                return True
+            dt = timestamp_to_dt(i['timestamp'])
+            i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
 
-    return 
-    #ref = data['%{Referer}i']
-    #byte = data['%b']
-    #code = data['%b']
-    #code = data['%b']
+            vendor = get_vendor(i['mac'])
+            if vendor:
+                i['vendor'] = vendor
+
+            # Only add the following status codes
+            if i['status'] in [200, 206, 400, 401, 403, 404, 500]:
+                col = dbopen('log')
+                try:
+                    col.insert(i)
+                except:
+                    print "Unable to insert log data"
+                    return False
+                else:
+                    return True
+
+    return False
 
 def get_boot_requests(mac = False, first = 0, limit = False, status = []):
     res = []
@@ -479,28 +487,27 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
         if mac:
             q['mac'] = mac
 
-        if limit:
-            cursor = col.find(q, limit=limit)
-        else:
-            cursor = col.find(q)
+        cursor = col.find(q)
     except:
         print "Unable to get boot requests %s" % (q)
     else:
-        for i in cursor:
-            dt = timestamp_to_dt(i['timestamp'])
-            i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
+        for i in cursor.sort('epoch',pymongo.DESCENDING):
+            dt = epoch_to_dt(i['epoch'])
             i['age'] = humanize_date_difference(dt,now)
             i['pretty_mac'] = pretty_mac(i['mac'])
             i['status'] = int(i['status'])
 
-            vendor = get_vendor(i['mac'])
-            if vendor:
-                i['vendor'] = vendor
+            fqdn = get_reverse_address(i['client'])
+            if fqdn:
+                i['client_ptr'] = fqdn
+                i['domain'] = extract_domain_from_fqdn(fqdn)
 
             res.append(i)
 
 
-    res = sorted(res, key=lambda x: x['epoch'], reverse = True)
+    #res = sorted(res, key=lambda x: x['epoch'], reverse = True)
+    if limit:
+        res=res[first:first+limit]
     return res
 
 #def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
@@ -583,11 +590,12 @@ def get_reverse_address(ip):
 @app.route("/")
 def index():
     known = get_boot_requests(limit = 5)
+    unknown = []
 
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'pretty_mac',    'pretty': 'MAC'},
-        {'id': 'domain',        'pretty': 'Domain'},
+        {'id': 'client',        'pretty': 'IP'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'status',        'pretty': 'HTTP status'},
     ]
@@ -814,8 +822,7 @@ def mac_security(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    #boot = get_last_boot_requests(limit = 1, mac = mac)
-    boot = {}
+    boot = get_boot_requests(limit = 1, mac = mac)
     cfg = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_security.html", \
@@ -830,8 +837,7 @@ def mac_configuration(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    #boot = get_last_boot_requests(limit = 1, mac = mac)
-    boot = {}
+    boot = get_boot_requests(limit = 1, mac = mac)
     cfg = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_configuration.html", \
@@ -841,6 +847,10 @@ def mac_configuration(mac):
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
     mac = clean_mac(mac)
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    boot = get_boot_requests(limit = 1, mac = mac)
     history = get_boot_requests(mac)
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
@@ -851,12 +861,11 @@ def mac_history(mac):
         {'id': 'host',          'pretty': 'Served by'},
         {'id': 'status',        'pretty': 'HTTP status'},
     ]
-    if not mac:
-        return flask.make_response("The given mac address is not valid", 400)
 
     return flask.render_template("mac_history.html", \
         title = "%s boot history" % mac, mac = mac, \
-        active = "history", entries = history, headings = headings)
+        active = "history", entries = history, headings = headings, \
+        boot = boot)
 
 @app.route("/about/")
 @app.route("/about")

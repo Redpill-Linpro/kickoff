@@ -4,7 +4,8 @@ host="boot.i.bitbit.net"
 
 cat ../conf/oui.txt | egrep '\s+[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}' | awk '{print $1}' | while read vendor ; do
   mac="${vendor}-00-00-00"
-  curl -IL http://${host}/bootstrap/${mac}/ipxe 2>&1
+  mac=`echo $mac | sed 's/-//g'`
+  curl -L http://${host}/bootstrap/${mac}/ipxe 2>&1
   sleep $[ ( $RANDOM % 10 )  + 1 ]s
 done
 
