@@ -1,11 +1,10 @@
 #!/bin/bash
 
-host="192.168.50.4"
-#host="87.238.42.52"
+host="boot.i.bitbit.net"
 
 cat ../conf/oui.txt | egrep '\s+[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}' | awk '{print $1}' | while read vendor ; do
   mac="${vendor}-00-00-00"
-  curl -I http://${host}/bootstrap/mac-${mac}.ipxe 2>&1
+  curl -IL http://${host}/bootstrap/${mac}/ipxe 2>&1
   sleep $[ ( $RANDOM % 10 )  + 1 ]s
 done
 
