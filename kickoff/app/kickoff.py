@@ -465,6 +465,10 @@ def process_log_data(data,checksum,host):
             if vendor:
                 i['vendor'] = vendor
 
+            # This is a discovery. The mac address lacks configuration. Should
+            # add default configuration at this point.
+            #if i['status'] == 404:
+
             # Only add the following status codes
             if i['status'] in [200, 206, 400, 401, 403, 404, 500]:
                 col = dbopen('log')
@@ -654,9 +658,9 @@ def hosts():
 
     hosts = sorted(hosts, key=lambda x: x['epoch'], reverse = True)
     headings = [
-        {'id': 'pretty_mac',    'pretty': 'MAC'},
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'timestamp',     'pretty': 'Timestamp'},
+        {'id': 'pretty_mac',    'pretty': 'MAC'},
         {'id': 'domain',        'pretty': 'Domain'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
@@ -965,8 +969,7 @@ def get_bootstrap_cfg(mac = False):
 
     repo = gitsh.gitsh(repository, cache, True)
     if os.path.isdir(cache):
-        #repo.pull()
-        pass
+        repo.pull()
     else:
         repo.clone()
 

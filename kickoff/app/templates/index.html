@@ -22,27 +22,39 @@
         <th></th>
       </thead>
       <tbody>
-      {% for i in unknown %}
-        <tr>
-          <td>{{ i.age }}</td>
+      {% for e in unknown %}
+        {% if 'status' in e %}
+          {% if e.status == 200 %}
+            <tr class="success">
+          {% elif e.status == 403 %}
+            <tr class="danger">
+          {% elif e.status == 404 %}
+            <tr class="active">
+          {% else %}
+            <tr>
+          {% endif %}
+        {% else %}
+          <tr>
+        {% endif %}
+          <td>{{ e.age }}</td>
           <td>
-            {% if i.vendor %}
-              <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.pretty_mac }}</a>
+            {% if e.vendor %}
+              <a rel="tooltip" title="{{ e.vendor }}" href="/mac/{{ e.mac }}">{{ e.pretty_mac }}</a>
             {% else %}
-              <a rel="tooltip" title="Unknown vendor" href="/mac/{{ i.mac }}">{{ i.pretty_mac }}</a>
+              <a rel="tooltip" title="Unknown vendor" href="/mac/{{ e.mac }}">{{ e.pretty_mac }}</a>
             {% endif %}
           </td>
           <td>
-            {% if i.client_ptr %}
-              <a href="/mac/{{ i.mac }}">
-                {{ i.client_ptr }}
+            {% if e.client_ptr %}
+              <a href="/mac/{{ e.mac }}">
+                {{ e.client_ptr }}
               </a>
             {% else %}
               <span class="label label-warning">Lookup failed</span>
             {% endif %}
           </td>
           <td>
-            <small>{{ i.client }}</small>
+            <small>{{ e.client }}</small>
           </td>
         </tr>
       {% endfor %}

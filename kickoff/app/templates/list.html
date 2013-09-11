@@ -17,6 +17,8 @@
           <tr class="success">
         {% elif e.status == 403 %}
           <tr class="danger">
+        {% elif e.status == 404 %}
+          <tr class="active">
         {% else %}
           <tr>
         {% endif %}
@@ -24,7 +26,7 @@
         <tr>
       {% endif %}
         {% for h in headings %}
-          <td>
+          <td> 
             {% if h.id == 'pretty_mac' %}
               <a rel="tooltip" title="{% if e['vendor'] %}{{ e['vendor'] }}{% else %}Unknown vendor{% endif %}" href="/mac/{{ e['mac'] }}">
                 {{ e[h.id] }}
@@ -33,19 +35,21 @@
               <a href="/domain/{{ e[h.id] }}">
                 {{ e[h.id] }}
               </a>
-            {% elif h.id == 'client-ptr' %}
+            {% elif h.id == 'client_ptr' %}
               {% if e[h.id] %}
                 <a href="/mac/{{ e.mac }}">
                   {{ e[h.id] }}
                 </a>
               {% else %}
-                <span class="label label-info">Lookup failed</span>
+                <span class="label label-warning">Lookup failed</span>
               {% endif %}
             {% elif h.id == 'status' %}
               {% if e[h.id] == 404 %}
                 <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-eye-open"></span>
               {% elif e[h.id] == 403 %}
                 <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-ban-circle"></span>
+              {% elif e[h.id] == 200 %}
+                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-cloud-download"></span>
               {% else %}
                 {{ e[h.id] }}
               {% endif %}
