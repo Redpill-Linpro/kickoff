@@ -9,11 +9,15 @@
 </div>
 <div class="row">
   <div class="col-md-12">
-    <div class="lead">Current htaccess configuration</div>
-    {% if cfg[mac].htaccess %}
-      <pre>{{ cfg[mac].htaccess }}</pre>
+    {% if cfg[mac] %}
+      <div class="lead">Current htaccess configuration</div>
+      {% if cfg[mac].htaccess %}
+        <pre>{{ cfg[mac].htaccess }}</pre>
+      {% else %}
+        <p class="lead">None found</p>
+      {% endif %}
     {% else %}
-      <p class="lead">None found</p>
+      <p class="lead">No configuration was found for this mac address.</p>
     {% endif %}
   </div>
 </div>

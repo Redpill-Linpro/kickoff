@@ -17,43 +17,32 @@
       <thead>
         <th><span class="glyphicon glyphicon-time"></span></th>
         <th>MAC</th>
-        <th>DNS</th>
+        <th>DNS PTR</th>
+        <th>IP</th>
         <th></th>
       </thead>
       <tbody>
       {% for i in unknown %}
-        <tr
-          {% if i.seconds < 300 %}
-            class="success"
-          {% endif %}
-          >
+        <tr>
           <td>{{ i.age }}</td>
           <td>
             {% if i.vendor %}
-              <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
+              <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.pretty_mac }}</a>
             {% else %}
-              <a rel="tooltip" title="Unknown vendor" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
+              <a rel="tooltip" title="Unknown vendor" href="/mac/{{ i.mac }}">{{ i.pretty_mac }}</a>
             {% endif %}
           </td>
           <td>
-            {% if i.reverse %}
+            {% if i.client_ptr %}
               <a href="/mac/{{ i.mac }}">
-                {{ i.reverse }}
+                {{ i.client_ptr }}
               </a>
             {% else %}
-              <span class="label label-info">Lookup failed</span>
+              <span class="label label-warning">Lookup failed</span>
             {% endif %}
           </td>
           <td>
-            {% if i.status == 0 %}
-              <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
-            {% elif i.status == 1 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-eye-open" rel="tooltip" title="The host was discovered"></span></a>
-            {% elif i.status == 2 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
-            {% elif i.status == 3 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span></a>
-            {% endif %}
+            <small>{{ i.client }}</small>
           </td>
         </tr>
       {% endfor %}

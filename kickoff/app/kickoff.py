@@ -478,6 +478,28 @@ def process_log_data(data,checksum,host):
 
     return False
 
+def get_discovered_hosts(limit = False, uniqe = True):
+    res = []
+    history = get_boot_requests()
+    for i in history:
+        if i['status'] == 404:
+            if uniqe:
+                add = True
+                for r in res:
+                    if r['mac'] == i['mac']:
+                        add = False
+
+                if add:
+                    res.append(i)
+            else:
+                res.append(i)
+
+        if limit:
+            if len(res) >= limit:
+                 break
+
+    return res
+
 def get_boot_requests(mac = False, first = 0, limit = False, status = []):
     res = []
     now = datetime.datetime.now()
@@ -590,14 +612,14 @@ def get_reverse_address(ip):
 @app.route("/")
 def index():
     known = get_boot_requests(limit = 5)
-    unknown = []
+    unknown = get_discovered_hosts(limit = 5)
+
 
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'pretty_mac',    'pretty': 'MAC'},
-        {'id': 'client',        'pretty': 'IP'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
-        {'id': 'status',        'pretty': 'HTTP status'},
+        {'id': 'status',        'pretty': 'Status'},
     ]
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, entries = known, \
@@ -639,7 +661,7 @@ def hosts():
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
-        {'id': 'status',        'pretty': 'HTTP status'},
+        {'id': 'status',        'pretty': 'Status'},
     ]
 
     return flask.render_template("hosts.html", \
@@ -728,7 +750,7 @@ def domains():
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
-        {'id': 'status',        'pretty': 'HTTP status'},
+        {'id': 'status',        'pretty': 'Status'},
     ]
 
     domains = sorted(domains, key=lambda x: x['epoch'], reverse = True)
@@ -759,7 +781,7 @@ def domain(domain):
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
-        {'id': 'status',        'pretty': 'HTTP status'},
+        {'id': 'status',        'pretty': 'Status'},
         {'id': 'ipxe',          'pretty': 'iPXE'},
     ]
 
@@ -809,12 +831,12 @@ def domain(domain):
 #        active = "history", entries = entries, mac = mac, status = int(s), \
 #        boot = boot, \
 #        page = page, previous_page = previous_page, next_page = next_page)
-#
-#@app.route("/mac/<mac>")
-#@app.route("/mac/<mac>/")
-#def mac(mac):
-#    return flask.redirect('/mac/%s/history' % mac)
-#
+
+@app.route("/mac/<mac>")
+@app.route("/mac/<mac>/")
+def mac(mac):
+    return flask.redirect('/mac/%s/history' % mac)
+
 @app.route("/mac/<mac>/security", methods = ['GET', 'POST'])
 def mac_security(mac):
     mac = clean_mac(mac)
@@ -859,7 +881,7 @@ def mac_history(mac):
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
-        {'id': 'status',        'pretty': 'HTTP status'},
+        {'id': 'status',        'pretty': 'Status'},
     ]
 
     return flask.render_template("mac_history.html", \
@@ -943,7 +965,8 @@ def get_bootstrap_cfg(mac = False):
 
     repo = gitsh.gitsh(repository, cache, True)
     if os.path.isdir(cache):
-        repo.pull()
+        #repo.pull()
+        pass
     else:
         repo.clone()
 

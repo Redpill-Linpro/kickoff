@@ -9,11 +9,15 @@
 </div>
 <div class="row">
   <div class="col-md-12">
-    <div class="lead">Current iPXE configuration</div>
-    {% if cfg[mac].ipxe %}
-      <pre>{{ cfg[mac].ipxe }}</pre>
+    {% if cfg[mac] %}
+      <div class="lead">Current iPXE configuration</div>
+      {% if cfg[mac].ipxe %}
+        <pre>{{ cfg[mac].ipxe }}</pre>
+      {% else %}
+        <p class="lead">None found</p>
+      {% endif %}
     {% else %}
-      <p class="lead">None found</p>
+      <p class="lead">No configuration was found for this mac address.</p>
     {% endif %}
   </div>
 </div>

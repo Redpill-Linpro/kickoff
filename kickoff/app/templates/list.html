@@ -25,26 +25,32 @@
       {% endif %}
         {% for h in headings %}
           <td>
-            {% if h.id in e %}
-              {% if h.id == 'pretty_mac' %}
-                <a rel="tooltip" title="{% if e['vendor'] %}{{ e['vendor'] }}{% else %}Unknown vendor{% endif %}" href="/mac/{{ e['mac'] }}/history">
+            {% if h.id == 'pretty_mac' %}
+              <a rel="tooltip" title="{% if e['vendor'] %}{{ e['vendor'] }}{% else %}Unknown vendor{% endif %}" href="/mac/{{ e['mac'] }}">
+                {{ e[h.id] }}
+              </a>
+            {% elif h.id == 'domain' %}
+              <a href="/domain/{{ e[h.id] }}">
+                {{ e[h.id] }}
+              </a>
+            {% elif h.id == 'client-ptr' %}
+              {% if e[h.id] %}
+                <a href="/mac/{{ e.mac }}">
                   {{ e[h.id] }}
                 </a>
-              {% elif h.id == 'domain' %}
-                <a href="/domain/{{ e[h.id] }}">
-                  {{ e[h.id] }}
-                </a>
-              {% elif h.id == 'status' %}
-                {% if e[h.id] == 404 %}
-                  <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-eye-open"></span>
-                {% elif e[h.id] == 403 %}
-                  <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-ban-circle"></span>
-                {% else %}
-                  {{ e[h.id] }}
-                {% endif %}
+              {% else %}
+                <span class="label label-info">Lookup failed</span>
+              {% endif %}
+            {% elif h.id == 'status' %}
+              {% if e[h.id] == 404 %}
+                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-eye-open"></span>
+              {% elif e[h.id] == 403 %}
+                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-ban-circle"></span>
               {% else %}
                 {{ e[h.id] }}
               {% endif %}
+            {% else %}
+              {{ e[h.id] }}
             {% endif %}
           </td>
         {% endfor %}
