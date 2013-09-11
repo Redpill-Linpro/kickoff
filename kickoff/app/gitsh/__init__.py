@@ -69,11 +69,16 @@ class gitsh():
     def clone(self):
         s = False
     
-        pr = subprocess.Popen(['git', 'clone', self.repository, self.cache],
-               cwd=os.path.dirname(self.cache),
-               stdout=subprocess.PIPE, 
-               stderr=subprocess.PIPE, 
-               shell=False)
+        try:
+            pr = subprocess.Popen(['git', 'clone', self.repository, self.cache],
+                   cwd=os.path.dirname(self.cache),
+                   stdout=subprocess.PIPE, 
+                   stderr=subprocess.PIPE, 
+                   shell=False)
+        except:
+            print "Unable to clone repository %s to %s" % \
+                  (self.repository, self.cache)
+            return False
     
         (out, error) = pr.communicate()
 
@@ -92,11 +97,15 @@ class gitsh():
     def pull(self):
         s = False
     
-        pr = subprocess.Popen(['git', 'pull'],
-               cwd=self.cache,
-               stdout=subprocess.PIPE, 
-               stderr=subprocess.PIPE, 
-               shell=False)
+        try:
+            pr = subprocess.Popen(['git', 'pull'],
+                   cwd=self.cache,
+                   stdout=subprocess.PIPE, 
+                   stderr=subprocess.PIPE, 
+                   shell=False)
+        except:
+            print "Unable to execute git pull"
+            return False
     
         (out, error) = pr.communicate()
 
@@ -115,11 +124,15 @@ class gitsh():
     def add(self, path):
         s = False
     
-        pr = subprocess.Popen(['git', 'add', path],
-               cwd=self.cache,
-               stdout=subprocess.PIPE, 
-               stderr=subprocess.PIPE, 
-               shell=False)
+        try:
+            pr = subprocess.Popen(['git', 'add', path],
+                   cwd=self.cache,
+                   stdout=subprocess.PIPE, 
+                   stderr=subprocess.PIPE, 
+                   shell=False)
+        except:
+            print "Unable to execute git add"
+            return False
     
         (out, error) = pr.communicate()
 
@@ -138,11 +151,15 @@ class gitsh():
     def commit(self, path, message = "Not set"):
         s = False
 
-        pr = subprocess.Popen(['git', 'commit', '-m', message, path],
-               cwd=self.cache,
-               stdout=subprocess.PIPE, 
-               stderr=subprocess.PIPE, 
-               shell=False)
+        try:
+            pr = subprocess.Popen(['git', 'commit', '-m', message, path],
+                   cwd=self.cache,
+                   stdout=subprocess.PIPE, 
+                   stderr=subprocess.PIPE, 
+                   shell=False)
+        except:
+            print "Unable to execute git commit"
+            return False
     
         (out, error) = pr.communicate()
 
@@ -161,11 +178,15 @@ class gitsh():
     def push(self):
         s = False
 
-        pr = subprocess.Popen(['git', 'push', '-u', 'origin', 'master'],
-               cwd=self.cache,
-               stdout=subprocess.PIPE, 
-               stderr=subprocess.PIPE, 
-               shell=False)
+        try:
+            pr = subprocess.Popen(['git', 'push', '-u', 'origin', 'master'],
+                   cwd=self.cache,
+                   stdout=subprocess.PIPE, 
+                   stderr=subprocess.PIPE, 
+                   shell=False)
+        except:
+            print "Unable to execute git push"
+            return False
     
         (out, error) = pr.communicate()
 
@@ -185,19 +206,24 @@ class gitsh():
         s = False
         log = []
     
-        pr = subprocess.Popen(['git', 'log', '--format=author_name: %an\n \
-                                                       author_email: %ae\n \
-                                                       author_date: %at\n \
-                                                       committer_name: %cn\n \
-                                                       committer_email: %ce\n \
-                                                       committer_date: %ct\n \
-                                                       subject: %s\n \
-                                                       body: %b\n \
-                                                       \n'],
-               cwd=self.cache,
-               stdout=subprocess.PIPE, 
-               stderr=subprocess.PIPE, 
-               shell=False)
+        try:
+            pr = subprocess.Popen(['git', 'log', '--format= \
+                                                      author_name: %an\n \
+                                                      author_email: %ae\n \
+                                                      author_date: %at\n \
+                                                      committer_name: %cn\n \
+                                                      committer_email: %ce\n \
+                                                      committer_date: %ct\n \
+                                                      subject: %s\n \
+                                                      body: %b\n \
+                                                      \n'],
+                   cwd=self.cache,
+                   stdout=subprocess.PIPE, 
+                   stderr=subprocess.PIPE, 
+                   shell=False)
+        except:
+            print "Unable to execute git log"
+            return False
     
         (out, error) = pr.communicate()
 

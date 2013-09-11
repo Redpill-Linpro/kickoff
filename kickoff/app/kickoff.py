@@ -943,33 +943,33 @@ def get_bootstrap_cfg(mac = False):
 
     repo = gitsh.gitsh(repository, cache, True)
     if os.path.isdir(cache):
-        #repo.pull()
-        pass
+        repo.pull()
     else:
         repo.clone()
 
     data = {}
-    for m in os.listdir(cache):
-        path = cache + "/" + m
-        if os.path.isdir(path):
-            if verify_mac(m):
-                if mac:
-                    if mac != m:
-                        continue
-
-                if not m in data:
-                    data[m] = {}
-                    data[m]['pretty_mac'] = pretty_mac(m)
+    if os.path.isdir(cache):
+        for m in os.listdir(cache):
+            path = cache + "/" + m
+            if os.path.isdir(path):
+                if verify_mac(m):
+                    if mac:
+                        if mac != m:
+                            continue
     
-                for f in os.listdir(cache + "/" + m):
-                    path = cache + "/" + m + "/" + f
-                    if os.path.isfile(path):
-                        if f == 'ipxe':
-                            data[m]['ipxe'] = read_file(path)
-            
-                        elif f == '.htaccess':
-                            data[m]['htaccess'] = read_file(path)
+                    if not m in data:
+                        data[m] = {}
+                        data[m]['pretty_mac'] = pretty_mac(m)
         
+                    for f in os.listdir(cache + "/" + m):
+                        path = cache + "/" + m + "/" + f
+                        if os.path.isfile(path):
+                            if f == 'ipxe':
+                                data[m]['ipxe'] = read_file(path)
+                
+                            elif f == '.htaccess':
+                                data[m]['htaccess'] = read_file(path)
+            
     return data
 
 @app.route("/api/configuration/", methods = ['GET', 'POST'])
