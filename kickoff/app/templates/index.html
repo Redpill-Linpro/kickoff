@@ -7,52 +7,8 @@
 <div class="row">
   <div class="col-md-6">
     <h2 class="text-center">Recent boot history</h2>
-    <table class="table table-hover">
-      <thead>
-        <th><span class="glyphicon glyphicon-time"></span></th>
-        <th>MAC</th>
-        <th>DNS</th>
-        <th></th>
-      </thead>
-      <tbody>
-      {% for i in known %}
-        {% if i.status == 0 %}
-        <tr class="danger">
-        {% else %}
-        <tr>
-        {% endif %}
-          <td>{{ i.age }}</td>
-          <td>
-            {% if i.vendor %}
-              <a rel="tooltip" title="{{ i.vendor }}" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
-            {% else %}
-              <a rel="tooltip" title="Unknown vendor" href="/mac/{{ i.mac }}">{{ i.mac }}</a>
-            {% endif %}
-          </td>
-          <td>
-            {% if i.reverse %}
-              <a href="/mac/{{ i.mac }}">
-                {{ i.reverse }}
-              </a>
-            {% else %}
-              <span class="label label-info">Lookup failed</span>
-            {% endif %}
-          </td>
-          <td>
-            {% if i.status == 0 %}
-              <a href="/mac/{{ i.mac }}/security"><span class="glyphicon glyphicon-ban-circle" rel="tooltip" title="Permission denied by the security filters"></span></a>
-            {% elif i.status == 1 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-eye-open" rel="tooltip" title="The host was discovered"></span></a>
-            {% elif i.status == 2 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-hdd" rel="tooltip" title="Served default configuration"></span></a>
-            {% elif i.status == 3 %}
-              <a href="/mac/{{ i.mac }}/configuration"><span class="glyphicon glyphicon-cloud-download" rel="tooltip" title="Served custom configuration"></span></a>
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
+    {% include "list.html" %}
+
     <p class="text-center"><a href="/boot-history"><button type="button" class="btn btn-default">More ...</button></a></p>
  </div>
   <div class="col-md-6">

@@ -67,22 +67,22 @@ def dbopen(collection):
     # Return collection handler
     return col
 
-#def get_vendor(mac):
-#    path = '/vagrant/kickoff/conf/oui.txt'
-#    vendor = False
-#    if not os.path.isfile(path):
-#        return False
-#
-#    needle = mac[0:8].upper()
-#    r = re.compile('^\s+%s\s+\(hex\)\s+(.*)' % needle)
-#    with open(path, 'r') as f:
-#        for line in f:
-#            m = r.search(line)
-#            if m:
-#                vendor = m.group(1)
-#
-#    return vendor
-#
+def get_vendor(mac):
+    path = '/vagrant/kickoff/conf/oui.txt'
+    vendor = False
+    if not os.path.isfile(path):
+        return False
+
+    needle = mac[0:8].upper()
+    r = re.compile('^\s+%s\s+\(hex\)\s+(.*)' % needle)
+    with open(path, 'r') as f:
+        for line in f:
+            m = r.search(line)
+            if m:
+                vendor = m.group(1)
+
+    return vendor
+
 ## Save the data for a spesific MAC address.
 #def save_host(mac, data = {}):
 #    path = app.config['HOST_DIR'] + '/' + mac
@@ -445,6 +445,7 @@ def process_log_data(data,checksum,host):
             l['status'] = data['%>s']
             l['byte'] = data['%b']
             l['client'] = data['%h']
+
             fqdn = get_reverse_address(l['client'])
             if fqdn:
                 l['client_ptr'] = fqdn
@@ -491,6 +492,11 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
             i['age'] = humanize_date_difference(dt,now)
             i['pretty_mac'] = pretty_mac(i['mac'])
             i['status'] = int(i['status'])
+
+            vendor = get_vendor(i['mac'])
+            if vendor:
+                i['vendor'] = vendor
+
             res.append(i)
 
 
@@ -574,12 +580,20 @@ def get_reverse_address(ip):
     return reverse
 
 
-#@app.route("/")
-#def index():
-#    known = get_last_boot_requests(limit = 5)
-#    unknown = get_last_boot_requests(limit = 5, status = [1])
-#    return flask.render_template("index.html", title = "Overview", \
-#        active = "overview", unknown = unknown, known = known)
+@app.route("/")
+def index():
+    known = get_boot_requests(limit = 5)
+
+    headings = [
+        {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'pretty_mac',    'pretty': 'MAC'},
+        {'id': 'domain',        'pretty': 'Domain'},
+        {'id': 'client_ptr',    'pretty': 'DNS PTR'},
+        {'id': 'status',        'pretty': 'HTTP status'},
+    ]
+    return flask.render_template("index.html", title = "Overview", \
+        active = "overview", unknown = unknown, entries = known, \
+        headings = headings)
 
 @app.route("/hosts/")
 @app.route("/hosts")
@@ -972,12 +986,6 @@ def api_configuration():
     response = flask.make_response(json.dumps(out, indent=2))
     response.headers['cache-control'] = 'max-age=0, must-revalidate'
     return response
-
-@app.route("/")
-def index():
-    return flask.render_template("index.html", \
-        title = "Overview", \
-        active = "overview")
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
