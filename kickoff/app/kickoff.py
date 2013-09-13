@@ -34,7 +34,7 @@ def timestamp_to_dt(timestamp):
     return t
 
 def epoch_to_dt(epoch):
-    t = datetime.datetime.utcfromtimestamp(int(epoch))
+    t = datetime.datetime.fromtimestamp(int(epoch))
     return t
 
 def dbopen(collection):
