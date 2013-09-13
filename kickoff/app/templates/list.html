@@ -40,8 +40,18 @@
                 <a href="/mac/{{ e.mac }}">
                   {{ e[h.id] }}
                 </a>
+              {% endif %}
+            {% elif h.id == 'client' %}
+              {% if e[h.id] %}
+                <a href="/mac/{{ e.mac }}">
+                  {{ e[h.id] }}
+                </a>
+              {% endif %}
+            {% elif h.id == 'timestamp' %}
+              {% if e[h.id] %}
+                {{ e[h.id] }}
               {% else %}
-                <span class="label label-warning">Lookup failed</span>
+                <small>No history recorded for this host</small>
               {% endif %}
             {% elif h.id == 'status' %}
               {% if e[h.id] == 404 %}

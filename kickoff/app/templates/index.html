@@ -19,7 +19,6 @@
         <th>MAC</th>
         <th>DNS PTR</th>
         <th>IP</th>
-        <th></th>
       </thead>
       <tbody>
       {% for e in unknown %}
@@ -54,7 +53,9 @@
             {% endif %}
           </td>
           <td>
-            <small>{{ e.client }}</small>
+            <a href="/mac/{{ e.mac }}">
+              <small>{{ e.client }}</small>
+            </a>
           </td>
         </tr>
       {% endfor %}

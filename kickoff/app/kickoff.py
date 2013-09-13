@@ -623,9 +623,8 @@ def index():
 
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
-        {'id': 'pretty_mac',    'pretty': 'MAC'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
-        {'id': 'status',        'pretty': 'Status'},
+        {'id': 'client',        'pretty': 'IP'},
     ]
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, entries = known, \
