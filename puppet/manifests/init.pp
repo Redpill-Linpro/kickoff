@@ -12,6 +12,10 @@ File {
 }
 
 file { 
+    '/var/log/kickoff_slaves':
+        ensure => directory,
+        owner  => 'root',
+        owner  => 'root';
     '/etc/motd':
         content => "\nThis is the kickoff build environment\n\n";
     '/etc/nginx/sites-enabled/default': 
@@ -33,6 +37,11 @@ file {
         require => File['/srv/www'],
         notify  => Service['nginx'],
         target  => '/vagrant/kickoff';
+    '/var/log/kickoff_slaves':
+        ensure  => link,
+        require => File['/var/log/kickoff_slaves'],
+        notify  => Service['nginx'],
+        target  => '/vagrant/replica_dir';
 }
 
 Service {
