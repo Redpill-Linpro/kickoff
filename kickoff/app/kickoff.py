@@ -461,7 +461,7 @@ def process_log_data(data,checksum,host):
 
             dt = timestamp_to_dt(i['timestamp'])
             if dt:
-                i['epoch'] = time.mktime(dt.timetuple()) * 1000
+                i['epoch'] = int(time.mktime(dt.timetuple()))
 
             vendor = get_vendor(i['mac'])
             if vendor:
