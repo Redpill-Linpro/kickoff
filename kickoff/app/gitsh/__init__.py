@@ -76,8 +76,9 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            print "Unable to clone repository %s to %s" % \
-                  (self.repository, self.cache)
+            if self.verbose:
+                print "Unable to clone repository %s to %s" % \
+                      (self.repository, self.cache)
             return False
     
         (out, error) = pr.communicate()
@@ -104,7 +105,8 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            print "Unable to execute git pull"
+            if self.verbose:
+                print "Unable to execute git pull"
             return False
     
         (out, error) = pr.communicate()
@@ -131,7 +133,8 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            print "Unable to execute git add"
+            if self.verbose:
+                print "Unable to execute git add"
             return False
     
         (out, error) = pr.communicate()
@@ -158,7 +161,8 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            print "Unable to execute git commit"
+            if self.verbose:
+                print "Unable to execute git commit"
             return False
     
         (out, error) = pr.communicate()
@@ -185,7 +189,8 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            print "Unable to execute git push"
+            if self.verbose:
+                print "Unable to execute git push"
             return False
     
         (out, error) = pr.communicate()
@@ -222,7 +227,8 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            print "Unable to execute git log"
+            if self.verbose:
+                print "Unable to execute git log"
             return False
     
         (out, error) = pr.communicate()

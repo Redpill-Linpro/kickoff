@@ -967,7 +967,7 @@ def get_bootstrap_cfg(mac = False):
         if not verify_mac(mac):
             mac = False
 
-    repo = gitsh.gitsh(repository, cache, True)
+    repo = gitsh.gitsh(repository, cache)
     if os.path.isdir(cache):
         repo.pull()
     else:
