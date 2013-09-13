@@ -3,6 +3,7 @@
 import os
 import re
 import cgi
+import time
 import flask
 import socket
 import datetime
@@ -459,7 +460,8 @@ def process_log_data(data,checksum,host):
             i['mac'] = clean_mac(mac)
 
             dt = timestamp_to_dt(i['timestamp'])
-            i['epoch'] = (dt - datetime.datetime(1970,1,1)).total_seconds()
+            if dt:
+                i['epoch'] = time.mktime(dt.timetuple()) * 1000
 
             vendor = get_vendor(i['mac'])
             if vendor:
