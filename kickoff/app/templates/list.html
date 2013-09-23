@@ -51,7 +51,7 @@
               {% if e[h.id] %}
                 <span rel="tooltip" title="Timestamp as recorded by the web server in the NCSA log">{{ e[h.id] }}</span>
               {% else %}
-                <small>No history recorded for this host</small>
+                <small rel="tooltip" title="iPXE configuration for this host is present, but it has never used this configuration during netboot">No history recorded for this host</small>
               {% endif %}
             {% elif h.id == 'status' %}
               {% if e[h.id] == 404 %}
