@@ -1,7 +1,20 @@
 {% include "header.html" %}
 
-<h1>History</h1>
-<p class="lead">This is the entire net boot history shown in chronological order.</p>
+{% if status|count == 0 %}
+  <h1>Boot history</h1>
+  <p class="lead">The entire history of all netboot requests shown in chronological order.</p>
+{% else %}
+  {% if status|count == 1 and status[0] == 404 %}
+    <h1>Discovered hosts</h1>
+    <p class="lead">Host discovery requests in chronlogical order. These are netboot requests from hosts that are not yet known to the system.</p>
+  {% elif status|count == 1 and status[0] == -404 %}
+    <h1>Boot history</h1>
+    <p class="lead">Host netboot requests to known configurations. These are netboot requests which we know the configuration to serve.
+  {% else %}
+    <h1>Boot history</h1>
+    <p class="lead">All netboot requests according to the filter shown in chronological order.</p>
+  {% endif %}
+{% endif %}
 
 <div class="row">
   <div class="col-md-12">

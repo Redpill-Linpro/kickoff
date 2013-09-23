@@ -472,7 +472,9 @@ def process_log_data(data,checksum,host):
             # add default configuration at this point.
             #if i['status'] == 404:
 
-            # Only add the following status codes
+            # Only add the following status codes. 
+            # TODO: The idea here is to avoid 301/302 mostly, but is this really such a good idea? Consider using an
+            # exclude filter instead.
             if i['status'] in [200, 206, 400, 401, 403, 404, 500]:
                 col = dbopen('log')
                 try:
@@ -822,13 +824,14 @@ def history():
         for i in s.split(","):
             status.append(int(i))
 
+    exclude = False # The default filter is include
     if len(status) > 0:
         # Status filter is set
 
         # Check if this is a include or exclude filter
-        exclude = False # The default is include
         for s in status:
             if s<0:
+                # If any given statuses is less than 0, it's an exclude filter
                 exclude = True
 
         for i in history:
@@ -865,7 +868,8 @@ def history():
 
     data = sorted(data, key=lambda x: x['epoch'], reverse = True)
     return flask.render_template("history.html", title = "Boot history", \
-        active = "history", entries = data, headings = headings)
+        active = "history", entries = data, headings = headings, \
+        status = status, exclude = exclude)
 
 #@app.route("/boot-history/")
 #@app.route("/boot-history")
