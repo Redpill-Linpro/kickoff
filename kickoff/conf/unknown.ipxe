@@ -1,20 +1,6 @@
 #!ipxe
-# This is the default iPXE configuration that will be served to the first boot
-# request from a unknown MAC address.
-#
-# The first request may be used for diagnostics to ensure new hosts are being
-# verified before they are put into production.
-#
-# Get some ideas from: https://gist.github.com/robinsmidsrod/2234639
-#
-
-#chain http://bootstrap.i.bitbit.net/pxeboot/memtest.0 passes=1 && set memtest GOOD || set memtest BAD
-#set memtest_errno ${errno}
-#iseq ${memtest} GOOD && goto memtest-info || iseq ${memtest_errno} 0x1 && set memtest BAD || set memtest UNKNOWN
-#
-#chain http://bootstrap.i.bitbit.net/memtest-report.cgi?result=${memtest}&mac=${mac}&uuid=${uuid}&hostname=${hostname}
-#
-#reboot
+# This is the default iPXE configuration given automatically to new hosts. The
+# configuration must default to boot from local device.
 
 echo 
 echo This host is is not configured for netbooting.
