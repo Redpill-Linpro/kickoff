@@ -447,7 +447,8 @@ def create_default_configuration(i):
     status = True
 
     # Create directory
-    basedir = "%s/%s" % (app.config['CACHE'],i['mac'])
+    m = pretty_mac(i['mac'])
+    basedir = "%s/%s" % (app.config['CACHE'],m)
     if not os.path.exists(basedir):
         try:
             os.makedirs(basedir)
