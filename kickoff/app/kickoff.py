@@ -740,15 +740,15 @@ def maintenance():
 @app.route("/domains")
 def domains():
     history = get_boot_requests()
-    data = {}
-    for i in history:
-        if not i['mac'] in data:
-            data[i['mac']] = i
-
+    data = []
     domains = []
-    for mac in data:
-        if 'domain' in data[mac]:
-            domains.append(data[mac])
+
+    # Read only the last boot request from each domain into the dict
+    for i in history:
+        if 'domain' in i:
+            if not i['domain'] in domains:
+                domains.append(i['domain'])
+                data.append(i)
 
     headings = [
         {'id': 'domain',        'pretty': 'Domain'},
@@ -760,9 +760,9 @@ def domains():
         {'id': 'status',        'pretty': 'Status'},
     ]
 
-    domains = sorted(domains, key=lambda x: x['epoch'], reverse = True)
+    data = sorted(data, key=lambda x: x['epoch'], reverse = True)
     return flask.render_template("domains.html", title = "Domains", \
-        active = "domains", entries = domains, headings = headings)
+        active = "domains", entries = data, headings = headings)
 
 @app.route("/domain/<domain>")
 def domain(domain):
