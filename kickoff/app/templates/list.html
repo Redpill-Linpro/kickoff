@@ -49,7 +49,7 @@
               {% endif %}
             {% elif h.id == 'timestamp' %}
               {% if e[h.id] %}
-                {{ e[h.id] }}
+                <span rel="tooltip" title="Timestamp as recorded by the web server in the NCSA log">{{ e[h.id] }}</span>
               {% else %}
                 <small>No history recorded for this host</small>
               {% endif %}
