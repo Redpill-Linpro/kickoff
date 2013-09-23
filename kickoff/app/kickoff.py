@@ -999,8 +999,8 @@ def mac_security(mac):
 
     return flask.render_template("mac_security.html", \
         title = "%s security" % mac, mac = mac, \
-        active = "security", cfg = cfg, boot = boot)
-    mac = clean_mac(mac)
+        active = "security", cfg = cfg, boot = boot, \
+        pretty_mac = pretty_mac(mac))
     
 @app.route("/mac/<mac>/configuration")
 def mac_configuration(mac):
@@ -1014,6 +1014,7 @@ def mac_configuration(mac):
 
     return flask.render_template("mac_configuration.html", \
         title = "%s configuration" % mac, mac = mac, \
+        pretty_mac = pretty_mac(mac), \
         active = "configuration", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
@@ -1037,6 +1038,7 @@ def mac_history(mac):
     return flask.render_template("mac_history.html", \
         title = "%s boot history" % mac, mac = mac, \
         active = "history", entries = history, headings = headings, \
+        pretty_mac = pretty_mac(mac), \
         boot = boot)
 
 @app.route("/about/")
@@ -1121,9 +1123,10 @@ def get_bootstrap_cfg(mac = False):
 
     data = {}
     if os.path.isdir(cache):
-        for m in os.listdir(cache):
-            path = cache + "/" + m
+        for d in os.listdir(cache):
+            path = cache + "/" + d
             if os.path.isdir(path):
+                m = clean_mac(d)
                 if verify_mac(m):
                     if mac:
                         if mac != m:
@@ -1133,8 +1136,8 @@ def get_bootstrap_cfg(mac = False):
                         data[m] = {}
                         data[m]['pretty_mac'] = pretty_mac(m)
         
-                    for f in os.listdir(cache + "/" + m):
-                        path = cache + "/" + m + "/" + f
+                    for f in os.listdir(cache + "/" + d):
+                        path = cache + "/" + d + "/" + f
                         if os.path.isfile(path):
                             if f == 'ipxe':
                                 data[m]['ipxe'] = read_file(path)
