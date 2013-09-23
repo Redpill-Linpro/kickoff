@@ -824,11 +824,30 @@ def history():
 
     if len(status) > 0:
         # Status filter is set
+
+        # Check if this is a include or exclude filter
+        exclude = False # The default is include
+        for s in status:
+            if s<0:
+                exclude = True
+
         for i in history:
             if 'status' in i:
+                if exclude:
+                    # Exclude filter. Do not show entries with status prefixed 
+                    # with -
+                    if s*-1 == i['status']:
+                        pass
+                    else:
+                        data.append(i)
+                else:
+                    # Include filter. Show only entries with status matching
+                    # the list of possible statuses.
+                    if s == i['status']:
+                        data.append(i)
+
+                # Show only entries with matching status
                 if i['status'] in status:
-                    data.append(i)
-                elif i['status']*-1 not in status:
                     data.append(i)
     else:
         # Status filter is not set. Show everything.
