@@ -1,0 +1,2 @@
+allow from ##client##
+deny from all

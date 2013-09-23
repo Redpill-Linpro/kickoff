@@ -12,7 +12,9 @@ import apachelog
 import pymongo
 import hashlib
 import json
+import logging
 import gitsh
+import string
 
 #from dulwich.repo import Repo
 #from dulwich.client import HttpGitClient
@@ -37,6 +39,25 @@ def timestamp_to_dt(timestamp):
 def epoch_to_dt(epoch):
     t = datetime.datetime.fromtimestamp(int(epoch))
     return t
+
+def dolog(text, prefix = '', level = 'debug'):
+    logging.basicConfig(filename=app.config['LOG_FILE'],level=logging.DEBUG)
+
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    text = "[%s] %s : %s" % (timestamp, prefix, text)
+
+    if level == 'debug':
+        logging.debug(text)
+    elif level == 'info':
+        logging.info(text)
+    elif level == 'warning':
+        logging.warning(text)
+    elif level == 'error':
+        logging.error(text)
+    elif level == 'critical':
+        logging.critical(text)
 
 def dbopen(collection):
     dbhost = app.config['DBHOST']
@@ -180,12 +201,13 @@ def clean_domain(domain):
 
 def verify_mac(mac):
     macfilter = re.compile('^[a-f0-9]{12}$')
-    m = macfilter.match(mac)
 
-    if m:
-        return True
-    else:
-        return False
+    if mac:
+        m = macfilter.match(mac)
+        if m:
+            return True
+
+    return False
 
 ## Give MAC addresses nice formatting.
 def clean_mac(mac):
@@ -447,49 +469,56 @@ def create_default_configuration(i):
     status = True
 
     # Create directory
-    m = pretty_mac(i['mac'])
-    basedir = "%s/%s" % (app.config['CACHE'],m)
+    mac = pretty_mac(i['mac'])
+    prefix = mac
+
+    dolog("Will create default configuration for the new host", prefix)
+
+    basedir = "%s/%s" % (app.config['CACHE'],mac)
     if not os.path.exists(basedir):
         try:
             os.makedirs(basedir)
         except:
             status = False
-            print "Unable to create directory %s" % basedir
+            dolog("Unable to create directory %s" % (basedir), prefix)
+        else:
+            dolog("Directory %s created" % (basedir), prefix)
+    else:
+        dolog("Configuration directory for the new host does already exist", prefix)
+
+    repository = app.config['REPOSITORY']
+    cache = app.config['CACHE']
+    repo = gitsh.gitsh(repository, cache)
+    basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
+
+    if not os.path.isdir(cache):
+        try:
+            repo.clone()
+        except:
+            status = False
+            dolog("Failed to clone remote repository %s to %s" % (repository, cache), prefix)
+        else:
+            dolog("Remote repository %s cloned to %s" % (repository, cache), prefix)
 
     # Copy default ipxe configuration
     if status:
-        default_ipxe = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
-        target_ipxe = "%s/ipxe" % (basedir)
-        if not os.path.isfile(default_ipxe):
-            status = False
-            print "The default ipxe configuration %s was not found" % default_ipxe
+        template = app.config['DEFAULT_HOST_IPXE_CONFIGURATION']
+        if inject_template(template, mac):
+            t = "%s/%s" % (basedir, os.path.basename(template))
+            repo.add(t)
+            repo.commit(t, message = "Added automatically by host discovery from %s" % i['client'])
         else:
-            try:
-                shutil.copyfile(default_ipxe,target_ipxe)
-            except:
-                status = False
-                print "Unable to copy ipxe configuration from %s to %s" % (default_ipxe,target_ipxe)
+            status = False
 
     # Create default htaccess configuration
-    # Git add
     if status:
-        repository = app.config['REPOSITORY']
-        cache = app.config['CACHE']
-        repo = gitsh.gitsh(repository, cache)
-        if not os.path.isdir(cache):
-            try:
-                repo.clone()
-            except:
-                status = False
-                print "Unable to clone remote repository %s to %s" % (repository, cache)
-
-        if os.path.isdir(cache):
-            try:
-                repo.add(target_ipxe)
-                repo.commit(target_ipxe, message = "Added automatically by host discovery from %s" % i['client'])
-            except:
-                status = False
-                print "Unable to add and commit %s to local repository %s" % (target_ipxe,cache)
+        template = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
+        if inject_template(template, mac, i):
+            t = "%s/%s" % (basedir, os.path.basename(template))
+            repo.add(t)
+            repo.commit(t, message = "Added automatically by host discovery from %s" % i['client'])
+        else:
+            status = False
 
     # Git push
     if status:
@@ -498,6 +527,34 @@ def create_default_configuration(i):
         except:
             status = False
             print "Unable to push changes to remote repository %s" % (repository)
+
+    return status
+
+def inject_template(source, mac, data = {}):
+    basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
+    target = "%s/%s" % (basedir,os.path.basename(source))
+    status = True
+
+    dolog("Injecting template %s to %s" % (source, target), mac)
+    if not os.path.isfile(source):
+        status = False
+        dolog("The source template file (%s) was not found" % (source), mac)
+    else:
+        try:
+            content = open(source,'r').read()
+
+            for i in data:
+                needle = "##%s##" % i
+                if string.find(content,needle) > -1:
+                    dolog("Replacing %s with %s in %s" % (needle,data[i],target), mac)
+                    content = string.replace(content, needle, str(data[i]))
+
+            target = open(target,'w')
+            target.write(content)
+
+        except:
+            status = False
+            dolog("Unable to inject template (%s) to %s" % (source,target), mac)
 
     return status
 
@@ -687,12 +744,17 @@ def index():
     # Show only known hosts in the recent boot history column
     if len(k) > 0:
         # Status filter is set
+        enough = False
         for i in k:
             if 'status' in i:
                 if i['status'] != 404:
-                    known.append(i)
-                    if len(known) >= 5:
-                        continue
+                    if len(known) < 5:
+                        known.append(i)
+                    else:
+                        enough = True
+
+            if enough:
+                continue
 
     unknown = get_discovered_hosts(limit = 5)
 
@@ -753,6 +815,10 @@ def hosts():
 @app.route("/maintenance/")
 @app.route("/maintenance")
 def maintenance():
+    out = {}
+    out['errors'] = []
+    out['meta'] = []
+
     logdir = app.config['REPLICA_LOG_DIR']
     log_format = app.config['REPLICA_LOG_FORMAT']
 
@@ -762,16 +828,16 @@ def maintenance():
     cache = app.config['CACHE']
     repo = gitsh.gitsh(repository, cache)
     if os.path.isdir(cache):
-        repo.pull()
+        if repo.pull():
+            out['meta'].append("Remote repository pulled successfully")
     else:
-        repo.clone()
+        if repo.clone():
+            out['meta'].append("Remote repository cloned successfully")
 
     if not os.path.isdir(logdir):
         return flask.make_response("The path %s is not a directory" % logdir, 500)
 
     p = apachelog.parser(log_format)
-    out = {}
-    out['errors'] = []
     for h in os.listdir(logdir):
         path = "%s/%s" % (logdir,h)
         if os.path.isdir(path):
