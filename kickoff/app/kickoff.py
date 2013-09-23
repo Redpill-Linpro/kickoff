@@ -716,7 +716,8 @@ def maintenance():
                             try:
                                 data = p.parse(line)
                             except:
-                                out['errors'].append("Unable to parse line [%s] in file %s" % (line,path))
+                                #out['errors'].append("Unable to parse line [%s] in file %s" % (line,path))
+                                pass
                             else:
                                 checksum = hashlib.sha1()
                                 checksum.update(line)
