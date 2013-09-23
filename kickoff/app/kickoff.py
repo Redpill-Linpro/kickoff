@@ -788,7 +788,6 @@ def domain(domain):
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
         {'id': 'status',        'pretty': 'Status'},
-        {'id': 'ipxe',          'pretty': 'iPXE'},
     ]
 
     hosts = sorted(hosts, key=lambda x: x['epoch'], reverse = True)
