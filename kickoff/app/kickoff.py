@@ -3,6 +3,7 @@
 import os
 import re
 import cgi
+import shutil
 import time
 import flask
 import socket
@@ -442,6 +443,63 @@ def log_data_exists(checksum):
 
     return False
 
+def create_default_configuration(i):
+    status = True
+
+    # Create directory
+    basedir = "%s/%s" % (app.config['CACHE'],i['mac'])
+    if not os.path.exists(basedir):
+        try:
+            os.makedirs(basedir)
+        except:
+            status = False
+            print "Unable to create directory %s" % basedir
+
+    # Copy default ipxe configuration
+    if status:
+        default_ipxe = app.config['DEFAULT_UNKNOWN_HOST_IPXE_CONFIGURATION']
+        target_ipxe = "%s/ipxe" % (basedir)
+        if not os.path.isfile(default_ipxe):
+            status = False
+            print "The default ipxe configuration %s was not found" % default_ipxe
+        else:
+            try:
+                shutil.copyfile(default_ipxe,target_ipxe)
+            except:
+                status = False
+                print "Unable to copy ipxe configuration from %s to %s" % (default_ipxe,target_ipxe)
+
+    # Create default htaccess configuration
+    # Git add
+    if status:
+        repository = app.config['REPOSITORY']
+        cache = app.config['CACHE']
+        repo = gitsh.gitsh(repository, cache)
+        if not os.path.isdir(cache):
+            try:
+                repo.clone()
+            except:
+                status = False
+                print "Unable to clone remote repository %s to %s" % (repository, cache)
+
+        if os.path.isdir(cache):
+            try:
+                repo.add(target_ipxe)
+                repo.commit(target_ipxe, message = "Added automatically by host discovery from %s" % i['client'])
+            except:
+                status = False
+                print "Unable to add and commit %s to local repository %s" % (target_ipxe,cache)
+
+    # Git push
+    if status:
+        try:
+            repo.push()
+        except:
+            status = False
+            print "Unable to push changes to remote repository %s" % (repository)
+
+    return status
+
 def process_log_data(data,checksum,host):
     request = data['%r']
     mac = is_boot_request(request)
@@ -470,7 +528,8 @@ def process_log_data(data,checksum,host):
 
             # This is a discovery. The mac address lacks configuration. Should
             # add default configuration at this point.
-            #if i['status'] == 404:
+            if i['status'] == 404:
+                create_default_configuration(i)
 
             # Only add the following status codes. 
             # TODO: The idea here is to avoid 301/302 mostly, but is this really such a good idea? Consider using an
@@ -695,6 +754,16 @@ def hosts():
 def maintenance():
     logdir = app.config['REPLICA_LOG_DIR']
     log_format = app.config['REPLICA_LOG_FORMAT']
+
+    # Will do a pull for each maintenance run to allow external changes to 
+    # the configuration repository.
+    repository = app.config['REPOSITORY']
+    cache = app.config['CACHE']
+    repo = gitsh.gitsh(repository, cache)
+    if os.path.isdir(cache):
+        repo.pull()
+    else:
+        repo.clone()
 
     if not os.path.isdir(logdir):
         return flask.make_response("The path %s is not a directory" % logdir, 500)
