@@ -618,7 +618,20 @@ def get_reverse_address(ip):
 
 @app.route("/")
 def index():
-    known = get_boot_requests(limit = 5)
+    k = get_boot_requests()
+
+    known = []
+
+    # Show only known hosts in the recent boot history column
+    if len(k) > 0:
+        # Status filter is set
+        for i in k:
+            if 'status' in i:
+                if i['status'] != 404:
+                    known.append(i)
+                    if len(known) >= 5:
+                        continue
+
     unknown = get_discovered_hosts(limit = 5)
 
 
@@ -814,6 +827,8 @@ def history():
         for i in history:
             if 'status' in i:
                 if i['status'] in status:
+                    data.append(i)
+                elif i['status']*-1 not in status:
                     data.append(i)
     else:
         # Status filter is not set. Show everything.
