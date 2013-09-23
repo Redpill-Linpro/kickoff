@@ -399,15 +399,16 @@ def humanize_date_difference(now, otherdate=None, offset=None):
     else:
         return "now"
  
-    if delta_d > 1:
-        if delta_d > 6:
-            date = now + datetime.timedelta(days=-delta_d, hours=-delta_h, minutes=-delta_m)
-            return date.strftime('%A, %Y %B %m, %H:%I')
-        else:
-            wday = now + datetime.timedelta(days=-delta_d)
-            return wday.strftime('%A')
-    if delta_d == 1:
-        return "Yesterday"
+    if delta_d == 0:
+        #if delta_d > 6:
+        #    date = now + datetime.timedelta(days=-delta_d, hours=-delta_h, minutes=-delta_m)
+        #    return date.strftime('%A, %Y %B %m, %H:%I')
+        #else:
+        #    wday = now + datetime.timedelta(days=-delta_d)
+        #    return wday.strftime('%A')
+        return "%dh %dm" % (delta_h, delta_m)
+    if delta_d > 0:
+        return "%dd %dh %dm" % (delta_d, delta_h, delta_m)
     if delta_h > 0:
         return "%dh %dm" % (delta_h, delta_m)
     if delta_m > 0:
