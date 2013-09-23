@@ -663,7 +663,6 @@ def hosts():
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'timestamp',     'pretty': 'Timestamp'},
         {'id': 'pretty_mac',    'pretty': 'MAC'},
-        {'id': 'domain',        'pretty': 'Domain'},
         {'id': 'client_ptr',    'pretty': 'DNS PTR'},
         {'id': 'client',        'pretty': 'IP'},
         {'id': 'host',          'pretty': 'Served by'},
@@ -795,6 +794,44 @@ def domain(domain):
     return flask.render_template("domain.html", title = "Domain %s" % domain, \
         active = "domain", entries = hosts, headings = headings, \
         domain = domain)
+
+@app.route("/history/")
+@app.route("/history")
+def history():
+    history = get_boot_requests()
+    data = []
+    #domains = []
+
+    # Status filter
+    s = flask.request.args.get('status', False)
+    status = []
+    if s:
+        for i in s.split(","):
+            status.append(int(i))
+
+    if len(status) > 0:
+        # Status filter is set
+        for i in history:
+            if 'status' in i:
+                if i['status'] in status:
+                    data.append(i)
+    else:
+        # Status filter is not set. Show everything.
+        data = history
+
+    headings = [
+        {'id': 'age',           'pretty': 'Last active'},
+        {'id': 'timestamp',     'pretty': 'Timestamp'},
+        {'id': 'pretty_mac',    'pretty': 'MAC'},
+        {'id': 'client_ptr',    'pretty': 'DNS PTR'},
+        {'id': 'client',        'pretty': 'IP'},
+        {'id': 'host',          'pretty': 'Served by'},
+        {'id': 'status',        'pretty': 'Status'},
+    ]
+
+    data = sorted(data, key=lambda x: x['epoch'], reverse = True)
+    return flask.render_template("history.html", title = "Boot history", \
+        active = "history", entries = data, headings = headings)
 
 #@app.route("/boot-history/")
 #@app.route("/boot-history")
