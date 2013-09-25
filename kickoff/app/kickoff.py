@@ -1113,7 +1113,7 @@ def domain(domain):
 
     hosts = sorted(hosts, key=lambda x: x['epoch'], reverse = True)
     return flask.render_template("domain.html", title = "Domain %s" % domain, \
-        active = "domain", entries = hosts, headings = headings, \
+        active = "domains", entries = hosts, headings = headings, \
         domain = domain)
 
 @app.route("/history/")
