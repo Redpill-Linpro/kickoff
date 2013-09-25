@@ -1,0 +1,20 @@
+{% if message %}
+  {% if message_category == 0 %}
+    <div class="alert alert-success">
+    <strong>Success!</strong>
+  {% elif message_category == 1 %}
+    <div class="alert alert-info">
+    <strong>Info!</strong>
+  {% elif message_category == 2 %}
+    <div class="alert alert-warning">
+    <strong>Warning!</strong>
+  {% elif message_category == 3 %}
+    <div class="alert alert-danger">
+    <strong>Error!</strong>
+  {% else %}
+    <div class="alert alert-success">
+  {% endif %}
+  {{ message }}
+  </div>
+{% endif %}
+
