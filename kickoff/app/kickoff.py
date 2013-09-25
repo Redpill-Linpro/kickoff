@@ -1269,7 +1269,7 @@ def mac_configuration(mac):
     cfg = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_configuration.html", \
-        title = "%s configuration" % mac, mac = mac, \
+        title = "%s configuration" % pretty_mac(mac), mac = mac, \
         pretty_mac = pretty_mac(mac), \
         templates = templates, \
         message = message, \
