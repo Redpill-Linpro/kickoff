@@ -3,5 +3,8 @@
 <ul class="nav nav-tabs">
   <li {% if subactive=="available" %}class="active"{% endif %}><a href="/templates/available">Available</a></li>
   <li {% if subactive=="new" %}class="active"{% endif %}><a href="/templates/new">Create new</a></li>
+  {% if _id %}
+    <li {% if subactive=="modify" %}class="active"{% endif %}><a href="/templates/modify?id={{ _id }}">Modify</a></li>
+  {% endif %}
 </ul>
 

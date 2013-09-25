@@ -2,19 +2,44 @@
 
 {% include "templates_menu.html" %}
 
-<h2>Available</h2>
+<h2>Available templates</h2>
+<p class="lead">Showing all the templates in the system, including the ones that are not <i>enabled</i>.</p>
 
 <div class="row">
   <div class="col-md-12">
     <table class="table table-striped">
       <thead>
-        <th>Foo</th>
+        <th>Name</th>
+        <th>Enabled</th>
+        <th>Registered</th>
+        <th>Updated</th>
+        <th>ID</th>
+        <th></th>
       </thead>
       <tbody>
         {% for t in templates %}
-          <th>
-            <td>{{ t }}</td>
-          </th>
+          <tr>
+            <td>{{ t.name }}</td>
+            <td>
+              {% if t.enabled %}
+                <span rel="tooltip" title="The template is enabled" class="glyphicon glyphicon-play"></span>
+              {% else %}
+                <span rel="tooltip" title="The template is disabled" class="glyphicon glyphicon-pause"></span>
+              {% endif %}
+            </td>
+            <td>
+              {{ t.registered_age }}
+            </td>
+            <td>
+              {% if t.updated_age %}
+                {{ t.updated_age }}
+              {% else %}
+                Never
+              {% endif %}
+            </td>
+            <td><small>{{ t._id }}</small></td>
+            <td><a href="/templates/modify?id={{ t._id }}"><span class="glyphicon glyphicon-wrench"></span></a></td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>

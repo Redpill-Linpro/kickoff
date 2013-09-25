@@ -3,6 +3,7 @@
 import os
 import re
 import cgi
+import bson
 import shutil
 import time
 import flask
@@ -759,10 +760,18 @@ def get_templates():
         dolog("Unable to get templates from the database: %s" % (q), prefix)
     else:
         for i in cursor:
-            #dt = epoch_to_dt(i['epoch'])
-            #i['age'] = humanize_date_difference(dt,now)
-            #i['status'] = int(i['status'])
+            if 'registered' in i:
+                dt = epoch_to_dt(i['registered'])
+                i['registered_age'] = humanize_date_difference(dt,now)
+
+            if 'updated' in i:
+                dt = epoch_to_dt(i['updated'])
+                i['updated_age'] = humanize_date_difference(dt,now)
+                i['_id'] = str(i['_id'])
+
             templates.append(i)
+
+    templates = sorted(templates, key=lambda x: x['name'])
     return templates
 
 @app.route("/")
@@ -813,27 +822,107 @@ def templates_available():
         templates = templates, \
         active = "templates", subactive = "available" )
 
+@app.route("/templates/modify/", methods = ['GET', 'POST'])
+@app.route("/templates/modify", methods = ['GET', 'POST'])
 @app.route("/templates/new/", methods = ['GET', 'POST'])
 @app.route("/templates/new", methods = ['GET', 'POST'])
 def templates_new():
 
+    prefix = "templates_modify"
+    subactive = "new"
     message = False
     message_category = False
+    status = True
+    name = False
+    content = False
+    enabled = False
+
+    title = "Create new template"
+
+    _id = flask.request.args.get('id', False)
+    i = {}
+    if _id:
+        subactive = "modify"
+        templates = get_templates()
+        for t in templates:
+            if str(t['_id']) == str(_id):
+                title = "Modify template"
+
+                if 'name' in t:
+                    name = t['name']
+
+                if 'enabled' in t:
+                    enabled = t['enabled']
+
+                if 'content' in t:
+                    content = t['content']
+
+                try:
+                    i['_id'] = bson.objectid.ObjectId(_id)
+                    i['registered'] = t['registered']
+                except:
+                    message = "Template id is not valid!"
+                    message_category = 3
+                    status = False
 
     if flask.request.method == 'POST':
         try:
+            enabled = flask.request.form['enabled']
+        except:
+            enabled = False
+
+        try:
             name = flask.request.form['name']
             content = flask.request.form['content']
-            active = flask.request.form['active']
 
         except:
-            message = "Something not set"
-            message_category = 1
+            message = "All required input fields are not set, please try again."
+            message_category = 2
+
+        else:
+            if len(name) < 3:
+                message = "The name of the template is too short."
+                message_category = 2
+                status = False
+              
+            if len(content) < 3:
+                message = "The content of the template is too short."
+                message_category = 2
+                status = False
+
+            i['name'] = name
+            i['content'] = content
+
+            if enabled:
+                i['enabled'] = True
+            else:
+                i['enabled'] = False
+
+            if status:
+                col = dbopen('templates')
+                dt = datetime.datetime.now()
+                epoch = int(time.mktime(dt.timetuple()))
+                try:
+                    if _id:
+                        i['updated'] = epoch
+                        col.update({'_id':bson.objectid.ObjectId(_id)}, i,True)
+                    else:
+                        i['registered'] = epoch
+                        col.insert(i)
+                except:
+                    dolog("Unable to insert template into db", prefix)
+                    message = "Failed to write the changes to the database."
+                    message_category = 3
+                else:
+                    dolog("Template %s written to the database successfully" % name)
+                    message = "The changes have been written to the database."
+                    message_category = 0
     
-    return flask.render_template("templates_new.html", \
-        title = "Create new template", \
-        active = "templates", subactive = "new", \
-        message = message, message_category = message_category )
+    return flask.render_template("templates_modify.html", \
+        title = title, \
+        active = "templates", subactive = subactive, \
+        message = message, message_category = message_category, \
+        name = name, enabled = enabled, content = content, _id = _id)
 
 @app.route("/hosts/")
 @app.route("/hosts")
