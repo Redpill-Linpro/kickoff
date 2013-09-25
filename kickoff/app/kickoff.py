@@ -1245,6 +1245,7 @@ def mac_configuration(mac):
     templates = get_templates()
     message = False
     message_category = False
+    repository = app.config["REPOSITORY"]
 
     if flask.request.method == 'POST':
         # Will inject 
@@ -1272,6 +1273,7 @@ def mac_configuration(mac):
         title = "%s netboot configuration" % pretty_mac(mac), mac = mac, \
         pretty_mac = pretty_mac(mac), \
         templates = templates, \
+        repository = repository, \
         message = message, \
         message_category = message_category, \
         active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)

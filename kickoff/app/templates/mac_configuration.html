@@ -13,7 +13,7 @@
 <div class="row">
   <div class="col-md-12">
     {% if cfg[mac] %}
-      <div class="lead">Active</div>
+      <h3>Current configuration</h3>
       {% if cfg[mac].ipxe %}
         <pre>{{ cfg[mac].ipxe }}</pre>
       {% else %}
@@ -23,19 +23,18 @@
       <p class="lead">No configuration was found for this mac address.</p>
     {% endif %}
   </div>
-  <div class="col-md-12">
-    <div class="lead">Customize</div>
-    <form class="form-horizontal" role="form">
-      <div class="form-group">
-        <div class="col-lg-4">
-          <button type="button" class="btn btn-primary">Edit</button>
-        </div>
-      </div>
-    </form>
+</div>
 
+<h3>Modify</h3>
+<p class="lead">Modify the current configuration using one of the methods below.</p>
+<div class="row">
+  <div class="col-lg-4">
+    <h4>Inject template</h4>
+    <p>You can overwrite the current configuration by injecting a template. The new configuration will be identical* to the template.</p>
+    <p><small>* Variable substitution may be used by some templates.</small></p>
     <form class="form-horizontal" role="form" method="POST" action="">
       <div class="form-group">
-        <div class="col-lg-4">
+        <div class="col-lg-8">
           <select name="id" class="form-control">
             {% for t in templates %}
               {% if t.enabled %}
@@ -44,10 +43,26 @@
             {% endfor %}
           </select>
         </div>
-        <input type="submit" class="btn btn-primary" value="Inherit"/>
+        <input type="submit" class="btn btn-primary" value="Inject"/>
       </div>
     </form>
+  </div>
+  <div class="col-lg-4">
+    <h4>HTML editor</h4>
+    <p>The configuration can be modified using a simple html editor for more flexibility.</p>
+    <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <div class="col-lg-4">
+          <input type="submit" class="btn btn-primary" value="Edit &raquo;"/>
+        </div>
+      </div>
+    </form>
+ </div>
+  <div class="col-lg-4">
+    <h4>Git</h4>
+    <p>This web application is using the {{ repository }} repository to store configuration. Netboot configuration can therefore be modified using git directly for complete flexibility.</p>
   </div>
 </div>
 
 {% include "footer.html" %}
+
