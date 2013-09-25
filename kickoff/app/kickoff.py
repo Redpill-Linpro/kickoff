@@ -747,6 +747,23 @@ def get_reverse_address(ip):
         reverse = False
     return reverse
 
+def get_templates():
+    templates = []
+    now = datetime.datetime.now()
+    col = dbopen('templates')
+    prefix = "get_templates"
+    try:
+        q = {}
+        cursor = col.find(q)
+    except:
+        dolog("Unable to get templates from the database: %s" % (q), prefix)
+    else:
+        for i in cursor:
+            #dt = epoch_to_dt(i['epoch'])
+            #i['age'] = humanize_date_difference(dt,now)
+            #i['status'] = int(i['status'])
+            templates.append(i)
+    return templates
 
 @app.route("/")
 def index():
@@ -780,6 +797,43 @@ def index():
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, entries = known, \
         headings = headings)
+
+@app.route("/templates/")
+@app.route("/templates")
+def templates():
+    return flask.redirect('/templates/available')
+
+@app.route("/templates/available/")
+@app.route("/templates/available")
+def templates_available():
+    templates = get_templates()
+
+    return flask.render_template("templates_available.html", \
+        title = "Available templates", \
+        templates = templates, \
+        active = "templates", subactive = "available" )
+
+@app.route("/templates/new/", methods = ['GET', 'POST'])
+@app.route("/templates/new", methods = ['GET', 'POST'])
+def templates_new():
+
+    message = False
+    message_category = False
+
+    if flask.request.method == 'POST':
+        try:
+            name = flask.request.form['name']
+            content = flask.request.form['content']
+            active = flask.request.form['active']
+
+        except:
+            message = "Something not set"
+            message_category = 1
+    
+    return flask.render_template("templates_new.html", \
+        title = "Create new template", \
+        active = "templates", subactive = "new", \
+        message = message, message_category = message_category )
 
 @app.route("/hosts/")
 @app.route("/hosts")
@@ -1091,7 +1145,7 @@ def mac_security(mac):
 
     return flask.render_template("mac_security.html", \
         title = "%s security" % mac, mac = mac, \
-        active = "security", cfg = cfg, boot = boot, \
+        active = "hosts", subactive = "security", cfg = cfg, boot = boot, \
         pretty_mac = pretty_mac(mac))
     
 @app.route("/mac/<mac>/configuration")
@@ -1107,7 +1161,7 @@ def mac_configuration(mac):
     return flask.render_template("mac_configuration.html", \
         title = "%s configuration" % mac, mac = mac, \
         pretty_mac = pretty_mac(mac), \
-        active = "configuration", cfg = cfg, boot = boot)
+        active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
@@ -1129,7 +1183,8 @@ def mac_history(mac):
 
     return flask.render_template("mac_history.html", \
         title = "%s boot history" % mac, mac = mac, \
-        active = "history", entries = history, headings = headings, \
+        active = "hosts", subactive = "history", entries = history, \
+        headings = headings, \
         pretty_mac = pretty_mac(mac), \
         boot = boot)
 

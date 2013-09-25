@@ -1,0 +1,54 @@
+{% include "header.html" %}
+
+{% include "templates_menu.html" %}
+
+<h2>Create new template</h2>
+
+<p class="lead">Create a new template by filling out the form below. The template must be set to <i>active</i> to be visible.</p>
+
+<form class="form-horizontal" role="form" method="POST" action="">
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      {% if message %}
+        {% if message_category %}
+          {% if message_category == 0 %}
+            <div class="alert alert-success">
+          {% elif message_category == 1 %}
+            <div class="alert alert-warning">
+          {% else %}
+            <div>
+          {% endif %}
+        {% endif %}
+        {{ message }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="name" class="col-lg-2 control-label">Name</label>
+    <div class="col-lg-4">
+      <input name="name" type="text" class="form-control" id="name" placeholder="Name">
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="active" class="col-lg-2 control-label">Active</label>
+    <div class="col-lg-4">
+      <div class="checkbox">
+        <input name="active" type="checkbox" id="active" checked="checked"/>
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="content" class="col-lg-2 control-label">Content</label>
+    <div class="col-lg-4">
+      <textarea name="content" id="content" placeholder="#!ipxe" cols="60" rows="5"></textarea>
+    </div>
+  </div>
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <button type="submit" class="btn btn-default">Create</button>
+    </div>
+  </div>
+</form>
+
+{% include "footer.html" %}
