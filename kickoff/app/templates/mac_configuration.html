@@ -10,7 +10,7 @@
 <div class="row">
   <div class="col-md-12">
     {% if cfg[mac] %}
-      <div class="lead">Current iPXE configuration</div>
+      <div class="lead">Active</div>
       {% if cfg[mac].ipxe %}
         <pre>{{ cfg[mac].ipxe }}</pre>
       {% else %}
@@ -19,6 +19,31 @@
     {% else %}
       <p class="lead">No configuration was found for this mac address.</p>
     {% endif %}
+  </div>
+  <div class="col-md-12">
+    <div class="lead">Customize</div>
+    <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <div class="col-lg-4">
+          <button type="button" class="btn btn-primary">Edit</button>
+        </div>
+      </div>
+    </form>
+
+    <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <div class="col-lg-4">
+          <select class="form-control">
+            {% for t in templates %}
+              {% if t.enabled %}
+                <option>{{ t.name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <button type="button" class="btn btn-primary">Inherit</button>
+      </div>
+    </form>
   </div>
 </div>
 

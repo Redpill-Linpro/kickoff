@@ -2,6 +2,7 @@
 
 import os
 import re
+import operator
 import cgi
 import bson
 import shutil
@@ -771,7 +772,8 @@ def get_templates():
 
             templates.append(i)
 
-    templates = sorted(templates, key=lambda x: x['name'])
+    templates = sorted(templates, key=lambda x: (-x['enabled'], x['name']))
+    #templates = sorted(templates, key=operator.attrgetter('name'))
     return templates
 
 @app.route("/")
@@ -1240,6 +1242,7 @@ def mac_security(mac):
 @app.route("/mac/<mac>/configuration")
 def mac_configuration(mac):
     mac = clean_mac(mac)
+    templates = get_templates()
 
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
@@ -1250,6 +1253,7 @@ def mac_configuration(mac):
     return flask.render_template("mac_configuration.html", \
         title = "%s configuration" % mac, mac = mac, \
         pretty_mac = pretty_mac(mac), \
+        templates = templates, \
         active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
