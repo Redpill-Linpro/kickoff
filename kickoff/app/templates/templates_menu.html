@@ -2,7 +2,7 @@
 <p class="lead">It is suitable to use templates whenever netboot configurations are going to be used on multiple hosts.</p>
 
 <ul class="nav nav-tabs">
-  <li {% if subactive=="available" %}class="active"{% endif %}><a href="/templates/available">Available templates</a></li>
+  <li {% if subactive=="existing" %}class="active"{% endif %}><a href="/templates/existing">Existing templates</a></li>
   <li {% if subactive=="new" %}class="active"{% endif %}><a href="/templates/new">Create new template</a></li>
   {% if _id %}
     <li {% if subactive=="modify" %}class="active"{% endif %}><a href="/templates/modify?id={{ _id }}">Modify template</a></li>

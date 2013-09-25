@@ -510,8 +510,10 @@ def create_default_configuration(i):
 
     # Copy default ipxe configuration
     if status:
-        template = app.config['DEFAULT_HOST_IPXE_CONFIGURATION']
-        if inject_template(template, mac):
+        f = app.config['DEFAULT_HOST_IPXE_CONFIGURATION']
+        content = read_file(f)
+        target="ipxe"
+        if inject_template(content, target, mac, i):
             t = "%s/%s" % (basedir, os.path.basename(template))
             repo.add(t)
             repo.commit(t, message = "Added automatically by host discovery from %s" % i['client'])
@@ -520,8 +522,10 @@ def create_default_configuration(i):
 
     # Create default htaccess configuration
     if status:
-        template = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
-        if inject_template(template, mac, i):
+        f = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
+        content = read_file(f)
+        target=".htaccess"
+        if inject_template(content, target, mac, i):
             t = "%s/%s" % (basedir, os.path.basename(template))
             repo.add(t)
             repo.commit(t, message = "Added automatically by host discovery from %s" % i['client'])
@@ -538,31 +542,25 @@ def create_default_configuration(i):
 
     return status
 
-def inject_template(source, mac, data = {}):
-    basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
-    target = "%s/%s" % (basedir,os.path.basename(source))
+def inject_template(content, target, mac, data = {}):
+    path = "%s/%s/%s" % (app.config['CACHE'],pretty_mac(mac),target)
     status = True
 
-    dolog("Injecting template %s to %s" % (source, target), mac)
-    if not os.path.isfile(source):
+    dolog("Injecting template into %s" % (path), mac)
+
+    try:
+        for i in data:
+            needle = "##%s##" % i
+            if string.find(content,needle) > -1:
+                dolog("Replacing %s with %s in %s" % (needle,data[i],target), mac)
+                content = string.replace(content, needle, str(data[i]))
+
+        t = open(path,'w')
+        t.write(content)
+
+    except:
         status = False
-        dolog("The source template file (%s) was not found" % (source), mac)
-    else:
-        try:
-            content = open(source,'r').read()
-
-            for i in data:
-                needle = "##%s##" % i
-                if string.find(content,needle) > -1:
-                    dolog("Replacing %s with %s in %s" % (needle,data[i],target), mac)
-                    content = string.replace(content, needle, str(data[i]))
-
-            target = open(target,'w')
-            target.write(content)
-
-        except:
-            status = False
-            dolog("Unable to inject template (%s) to %s" % (source,target), mac)
+        dolog("Unable to inject template into %s" % (path), mac)
 
     return status
 
@@ -812,17 +810,17 @@ def index():
 @app.route("/templates/")
 @app.route("/templates")
 def templates():
-    return flask.redirect('/templates/available')
+    return flask.redirect('/templates/existing')
 
-@app.route("/templates/available/")
-@app.route("/templates/available")
-def templates_available():
+@app.route("/templates/existing/")
+@app.route("/templates/existing")
+def templates_existing():
     templates = get_templates()
 
-    return flask.render_template("templates_available.html", \
+    return flask.render_template("templates_existing.html", \
         title = "Available templates", \
         templates = templates, \
-        active = "templates", subactive = "available" )
+        active = "templates", subactive = "existing" )
 
 @app.route("/templates/modify/", methods = ['GET', 'POST'])
 @app.route("/templates/modify", methods = ['GET', 'POST'])
@@ -1256,12 +1254,17 @@ def mac_configuration(mac):
             message = "All required input fields are not set, please try again."
             message_category = 3
         else:
-            message = "Something should happen here."
+            message = "The template was not found. Please re-try."
+            message_category = 2
             for t in templates:
                 if t['_id'] == _id:
-                    message = "Something should happen here. Yes indeed."
 
-            message_category = 1
+                    target="ipxe"
+                    content = t['content']
+                    data = get_boot_requests(limit = 1, mac = mac)
+                    if inject_template(content, target, mac, data):
+                        message = "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
+                        message_category = 0
 
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
