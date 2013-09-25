@@ -1235,7 +1235,7 @@ def mac_security(mac):
     cfg = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_security.html", \
-        title = "%s security" % mac, mac = mac, \
+        title = "%s security" % pretty_mac(mac), mac = mac, \
         active = "hosts", subactive = "security", cfg = cfg, boot = boot, \
         pretty_mac = pretty_mac(mac))
     
@@ -1269,7 +1269,7 @@ def mac_configuration(mac):
     cfg = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_configuration.html", \
-        title = "%s configuration" % pretty_mac(mac), mac = mac, \
+        title = "%s netboot configuration" % pretty_mac(mac), mac = mac, \
         pretty_mac = pretty_mac(mac), \
         templates = templates, \
         message = message, \
@@ -1295,7 +1295,7 @@ def mac_history(mac):
     ]
 
     return flask.render_template("mac_history.html", \
-        title = "%s boot history" % mac, mac = mac, \
+        title = "%s boot history" % pretty_mac(mac), mac = mac, \
         active = "hosts", subactive = "history", entries = history, \
         headings = headings, \
         pretty_mac = pretty_mac(mac), \
