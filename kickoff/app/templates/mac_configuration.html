@@ -7,6 +7,9 @@
     <h2>Configuration</h2>
   </div>
 </div>
+
+{% include "message.html" %}
+
 <div class="row">
   <div class="col-md-12">
     {% if cfg[mac] %}
@@ -30,18 +33,18 @@
       </div>
     </form>
 
-    <form class="form-horizontal" role="form">
+    <form class="form-horizontal" role="form" method="POST" action="">
       <div class="form-group">
         <div class="col-lg-4">
-          <select class="form-control">
+          <select name="id" class="form-control">
             {% for t in templates %}
               {% if t.enabled %}
-                <option>{{ t.name }}</option>
+                <option value="{{ t._id }}">{{ t.name }}</option>
               {% endif %}
             {% endfor %}
           </select>
         </div>
-        <button type="button" class="btn btn-primary">Inherit</button>
+        <input type="submit" class="btn btn-primary" value="Inherit"/>
       </div>
     </form>
   </div>

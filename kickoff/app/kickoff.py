@@ -1239,10 +1239,28 @@ def mac_security(mac):
         active = "hosts", subactive = "security", cfg = cfg, boot = boot, \
         pretty_mac = pretty_mac(mac))
     
-@app.route("/mac/<mac>/configuration")
+@app.route("/mac/<mac>/configuration", methods = ['POST', 'GET'])
 def mac_configuration(mac):
     mac = clean_mac(mac)
     templates = get_templates()
+    message = False
+    message_category = False
+
+    if flask.request.method == 'POST':
+        # Will inject 
+        status = True
+        try:
+            _id = flask.request.form['id']
+        except:
+            message = "All required input fields are not set, please try again."
+            message_category = 3
+        else:
+            message = "Something should happen here."
+            for t in templates:
+                if t['_id'] == _id:
+                    message = "Something should happen here. Yes indeed."
+
+            message_category = 1
 
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
@@ -1254,6 +1272,8 @@ def mac_configuration(mac):
         title = "%s configuration" % mac, mac = mac, \
         pretty_mac = pretty_mac(mac), \
         templates = templates, \
+        message = message, \
+        message_category = message_category, \
         active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
@@ -1332,9 +1352,9 @@ def about():
 #
 #    return flask.make_response(ipxe, 200, h)
 
-def save_host_boot_configuration(mac, ipxe, htaccess):
-    status = False
-    return status
+#def save_host_boot_configuration(mac, ipxe, htaccess):
+#    status = False
+#    return status
 
 def read_file(path):
     contents = False
@@ -1387,29 +1407,25 @@ def get_bootstrap_cfg(mac = False):
             
     return data
 
-@app.route("/api/configuration/", methods = ['GET', 'POST'])
-@app.route("/api/configuration", methods = ['GET', 'POST'])
-def api_configuration():
-    out = {}
-    if flask.request.method == 'GET':
-        out = get_bootstrap_cfg()
-
-    if flask.request.method == 'POST':
-        try:
-            mac = clean_mac(flask.request.form['mac'])
-            ipxe = flask.request.form['ipxe']
-            htaccess = flask.request.form['htaccess']
-
-        except:
-            out['error'] = 'The input data was invalid'
-
-        else:
-            if save_host_boot_configuration(mac, ipxe, htaccess):
-                out['status'] = 'OK'
-
-    response = flask.make_response(json.dumps(out, indent=2))
-    response.headers['cache-control'] = 'max-age=0, must-revalidate'
-    return response
+#@app.route("/api/configuration/", methods = ['GET', 'POST'])
+#@app.route("/api/configuration", methods = ['GET', 'POST'])
+#def api_configuration():
+#    out = {}
+#    if flask.request.method == 'GET':
+#        out = get_bootstrap_cfg()
+#
+#    if flask.request.method == 'POST':
+#        try:
+#            mac = clean_mac(flask.request.form['mac'])
+#            ipxe = flask.request.form['ipxe']
+#            htaccess = flask.request.form['htaccess']
+#
+#        except:
+#            out['error'] = 'The input data was invalid'
+#
+#    response = flask.make_response(json.dumps(out, indent=2))
+#    response.headers['cache-control'] = 'max-age=0, must-revalidate'
+#    return response
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
