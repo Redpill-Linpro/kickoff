@@ -55,11 +55,11 @@
               {% endif %}
             {% elif h.id == 'status' %}
               {% if e[h.id] == 404 %}
-                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-eye-open"></span>
+                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}. Configuration for this mac address did not exist at the time of the request." class="glyphicon glyphicon-eye-open"></span>
               {% elif e[h.id] == 403 %}
-                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-ban-circle"></span>
+                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}. This IP address does not have access to the configuration for the specified mac address." class="glyphicon glyphicon-ban-circle"></span>
               {% elif e[h.id] == 200 %}
-                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}" class="glyphicon glyphicon-cloud-download"></span>
+                <span rel="tooltip" title="HTTP status code {{ e[h.id] }}. This request was handled successfully." class="glyphicon glyphicon-cloud-download"></span>
               {% else %}
                 {{ e[h.id] }}
               {% endif %}
