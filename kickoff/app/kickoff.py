@@ -446,7 +446,7 @@ def is_boot_request(request):
         mac = m.group(1)
         return mac
     else:
-        dolog("Request %s is not a boot request" % request)
+        #dolog("Request %s is not a boot request" % request)
         return False
 
 def log_data_exists(checksum):
@@ -486,6 +486,11 @@ def create_default_configuration(i):
             dolog("Directory %s created" % (basedir), prefix)
     else:
         dolog("Configuration directory for the new host does already exist", prefix)
+
+    p = "%s/ipxe" % (basedir)
+    if os.path.exists(p):
+        dolog("iPXE configuration for mac %s does already exist in %s. Aborting to avoid overwriting." % (mac, p), prefix)
+        return False
 
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
@@ -564,10 +569,7 @@ def process_log_data(data,checksum,host):
     mac = is_boot_request(request)
     prefix = "process_log_data"
     if mac:
-        if log_data_exists(checksum):
-            dolog("Log entry exists, checksum %s" % (checksum), prefix)
-        else:
-            dolog("New log entry found, checksum %s" % (checksum), prefix)
+        if not log_data_exists(checksum):
 
             i = {}
             i['_id'] = checksum
@@ -590,7 +592,7 @@ def process_log_data(data,checksum,host):
             if vendor:
                 i['vendor'] = vendor
 
-            dolog("Log entry was %s" % (i), prefix)
+            #dolog("Log entry was %s" % (i), prefix)
 
             # This is a discovery. The mac address lacks configuration. Should
             # add default configuration at this point.
@@ -601,6 +603,7 @@ def process_log_data(data,checksum,host):
             # TODO: The idea here is to avoid 301/302 mostly, but is this really such a good idea? Consider using an
             # exclude filter instead.
             if i['status'] in [200, 206, 400, 401, 403, 404, 500]:
+                dolog("New log entry found to store, checksum %s" % (checksum), prefix)
                 col = dbopen('log')
                 try:
                     col.insert(i)
