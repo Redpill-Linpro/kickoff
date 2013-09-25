@@ -440,12 +440,13 @@ def humanize_date_difference(now, otherdate=None, offset=None):
         return "%ds" % delta_s
 
 def is_boot_request(request):
-    r = re.compile('^GET\s+\/bootstrap\/([A-Fa-f0-9]{12})\/ipxe\s+HTTP\/[0-9]+\.[0-9]+$')
+    r = re.compile('^GET\s+\/bootstrap\/(([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2}))\/ipxe\s+HTTP\/[0-9]+\.[0-9]+$')
     m = r.match(request)
     if m:
         mac = m.group(1)
         return mac
     else:
+        dolog("Request %s is not a boot request" % request)
         return False
 
 def log_data_exists(checksum):
@@ -561,8 +562,13 @@ def inject_template(source, mac, data = {}):
 def process_log_data(data,checksum,host):
     request = data['%r']
     mac = is_boot_request(request)
+    prefix = "process_log_data"
     if mac:
-        if not log_data_exists(checksum):
+        if log_data_exists(checksum):
+            dolog("Log entry exists, checksum %s" % (checksum), prefix)
+        else:
+            dolog("New log entry found, checksum %s" % (checksum), prefix)
+
             i = {}
             i['_id'] = checksum
             i['host'] = host
@@ -584,6 +590,8 @@ def process_log_data(data,checksum,host):
             if vendor:
                 i['vendor'] = vendor
 
+            dolog("Log entry was %s" % (i), prefix)
+
             # This is a discovery. The mac address lacks configuration. Should
             # add default configuration at this point.
             if i['status'] == 404:
@@ -597,9 +605,10 @@ def process_log_data(data,checksum,host):
                 try:
                     col.insert(i)
                 except:
-                    print "Unable to insert log data"
+                    dolog("Unable to insert log data into db", prefix)
                     return False
                 else:
+                    dolog("Log line %s inserted" % checksum, prefix)
                     return True
 
     return False
@@ -630,6 +639,7 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
     res = []
     now = datetime.datetime.now()
     col = dbopen('log')
+    prefix = "get_boot_requests"
     try:
         q = {}
         if mac:
@@ -637,7 +647,7 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
 
         cursor = col.find(q)
     except:
-        print "Unable to get boot requests %s" % (q)
+        dolog("Unable to get boot requests %s" % (q), prefix)
     else:
         for i in cursor.sort('epoch',pymongo.DESCENDING):
             dt = epoch_to_dt(i['epoch'])
@@ -821,6 +831,7 @@ def maintenance():
 
     logdir = app.config['REPLICA_LOG_DIR']
     log_format = app.config['REPLICA_LOG_FORMAT']
+    prefix = "maintenance"
 
     # Will do a pull for each maintenance run to allow external changes to 
     # the configuration repository.
@@ -838,19 +849,22 @@ def maintenance():
         return flask.make_response("The path %s is not a directory" % logdir, 500)
 
     p = apachelog.parser(log_format)
-    for h in os.listdir(logdir):
-        path = "%s/%s" % (logdir,h)
+    for host in os.listdir(logdir):
+        path = "%s/%s" % (logdir,host)
+        dolog("Processing logs from directory %s" % path, prefix)
         if os.path.isdir(path):
-            if not h in out:
-                out[h] = {}
+            if not host in out:
+                out[host] = {}
 
             for f in os.listdir(path):
-                path = "%s/%s/%s" % (logdir,h,f)
+                path = "%s/%s/%s" % (logdir,host,f)
+
                 if os.path.isfile(path):
                     meta = {}
                     try:
                         fp = open(path,'r')
                     except:
+                        dolog("Processing log: %s (failed to open!)" % (f), prefix)
                         out['errors'].append("Unable to open %s for reading" % path)
                     else:
                         meta['new_entries'] = 0
@@ -862,7 +876,15 @@ def maintenance():
                         #    meta['mtime'] = stat.st_mtime
                         #    meta['size'] = stat.st_size
 
-                        for line in fp:
+                        # Cheap way to count number of lines
+                        for lines, l in enumerate(fp):
+                            pass
+                        lines += 1
+                        fp.seek(0, 0)
+
+                        dolog("Log: %s (%d lines)" % (f,lines), prefix)
+
+                        for i,line in enumerate(fp):
                             try:
                                 data = p.parse(line)
                             except:
@@ -872,11 +894,11 @@ def maintenance():
                                 checksum = hashlib.sha1()
                                 checksum.update(line)
 
-                                s=process_log_data(data,checksum.hexdigest(),h)
+                                s=process_log_data(data,checksum.hexdigest(),host)
                                 if s:
                                     meta['new_entries'] += 1
 
-                    out[h][f] = meta
+                    out[host][f] = meta
 
     # Remove the error list if it's empty
     if len(out['errors']) == 0:
