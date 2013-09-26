@@ -1263,6 +1263,10 @@ def mac_configuration(mac):
     messages = []
     client = "TODO"
     repository = app.config['REPOSITORY']
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
     if flask.request.method == 'POST':
 
         # Will inject 
@@ -1294,9 +1298,6 @@ def mac_configuration(mac):
             if not found:
                 messages.append((2, "The template was not found. Please re-try."))
 
-    if not mac:
-        return flask.make_response("The given mac address is not valid", 400)
-
     boot = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
     for o in output:
@@ -1309,6 +1310,48 @@ def mac_configuration(mac):
         repository = repository, \
         messages = messages, \
         active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
+
+@app.route("/mac/<mac>/configuration/edit", methods = ['POST', 'GET'])
+def mac_configuration_edit(mac):
+    mac = clean_mac(mac)
+    messages = []
+    client = "TODO"
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    if flask.request.method == 'POST':
+
+        # Will inject 
+        status = True
+        try:
+            content = flask.request.form['content']
+        except:
+            messages.append((3, "All required input fields are not set, please try again."))
+        else:
+            target="ipxe"
+            data = get_boot_requests(limit = 1, mac = mac)
+            if len(data) == 1:
+                data = data[0]
+
+            log_message = "The netboot configuration for '%s' was manually edited" % (pretty_mac(mac))
+            (status, output) = inject_template(content, target, mac, log_message, data)
+            if status:
+                messages.append((0, "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))))
+            else:
+                for o in output:
+                    messages.append(o)
+
+    boot = get_boot_requests(limit = 1, mac = mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
+    for o in output:
+        messages.append(o)
+
+    return flask.render_template("mac_configuration_edit.html", \
+        title = "%s netboot configuration modification" % pretty_mac(mac), mac = mac, \
+        pretty_mac = pretty_mac(mac), \
+        messages = messages, \
+        active = "hosts", subactive = "edit", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
