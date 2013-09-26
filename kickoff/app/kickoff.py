@@ -500,10 +500,7 @@ def create_default_configuration(i):
         content = read_file(f)
         target="ipxe"
         message = "Added automatically by host discovery from %s" % i['client']
-        if inject_template(content, target, mac, message, i):
-            status = True
-        else:
-            status = False
+        (status, output) = inject_template(content, target, mac, message, i)
 
     # Create default htaccess configuration
     if status:
@@ -511,16 +508,14 @@ def create_default_configuration(i):
         content = read_file(f)
         target=".htaccess"
         message = "Added automatically by host discovery from %s" % i['client']
-        if inject_template(content, target, mac, message, i):
-            Status = True
-        else:
-            status = False
+        (status, output) = inject_template(content, target, mac, message, i)
 
     return status
 
 def inject_template(content, target, mac, log_message, data = {}):
     path = "%s/%s/%s" % (app.config['CACHE'],pretty_mac(mac),target)
     status = True
+    messages = []
 
     prefix = "inject_template"
     repository = app.config['REPOSITORY']
@@ -543,6 +538,11 @@ def inject_template(content, target, mac, log_message, data = {}):
             dolog("Remote repository %s cloned to %s" % (repository, cache), prefix)
     else:
         (s,out,error,ret) = repo.pull()
+        if not s:
+            if error:
+                messages.append((3,error))
+            else:
+                messages.append((3,out))
 
     dolog("Injecting template into %s" % (path), mac)
 
@@ -563,15 +563,33 @@ def inject_template(content, target, mac, log_message, data = {}):
     else:
         try:
             (s,out,error,ret) = repo.add(path)
+            if not s:
+                if error:
+                    messages.append((3,error))
+                else:
+                    messages.append((3,out))
+
             (s,out,error,ret) = repo.commit(path, message = log_message)
+            if not s:
+                if error:
+                    messages.append((3,error))
+                else:
+                    messages.append((3,out))
+
             (s,out,error,ret) = repo.push()
+            if not s:
+                if error:
+                    messages.append((3,error))
+                else:
+                    messages.append((3,out))
+
         except:
             dolog("Unable to commit and push the changes the remote repository.", mac)
             status = False
         else:
             dolog("The changes were commited and pushed to the remote repository.", mac)
 
-    return status
+    return (status, messages)
 
 def process_log_data(data,checksum,host):
     request = data['%r']
@@ -839,8 +857,7 @@ def templates_new():
 
     prefix = "templates_modify"
     subactive = "new"
-    message = False
-    message_category = False
+    messages = []
     status = True
     name = False
     content = False
@@ -870,8 +887,7 @@ def templates_new():
                     i['_id'] = bson.objectid.ObjectId(_id)
                     i['registered'] = t['registered']
                 except:
-                    message = "Template id is not valid!"
-                    message_category = 3
+                    messages.append((3,"Template id is not valid!"))
                     status = False
 
     if flask.request.method == 'POST':
@@ -885,18 +901,15 @@ def templates_new():
             content = flask.request.form['content']
 
         except:
-            message = "All required input fields are not set, please try again."
-            message_category = 2
+            messages.append((2, "All required input fields are not set, please try again."))
 
         else:
             if len(name) < 3:
-                message = "The name of the template is too short."
-                message_category = 2
+                messages.append((2, "The name of the template is too short."))
                 status = False
               
             if len(content) < 3:
-                message = "The content of the template is too short."
-                message_category = 2
+                messages.append((2, "The content of the template is too short."))
                 status = False
 
             i['name'] = name
@@ -920,23 +933,21 @@ def templates_new():
                         col.insert(i)
                 except:
                     dolog("Unable to insert template into db", prefix)
-                    message = "Failed to write the changes to the database."
-                    message_category = 3
+                    messages.append((3, "Failed to write the changes to the database."))
                 else:
                     dolog("Template %s written to the database successfully" % name)
-                    message = "The changes have been written to the database."
-                    message_category = 0
+                    messages.append((0, "The changes have been written to the database."))
     
     return flask.render_template("templates_modify.html", \
         title = title, \
         active = "templates", subactive = subactive, \
-        message = message, message_category = message_category, \
+        messages = messages, \
         name = name, enabled = enabled, content = content, _id = _id)
 
 @app.route("/hosts/")
 @app.route("/hosts")
 def hosts():
-    cfg = get_bootstrap_cfg()
+    (cfg,output) = get_bootstrap_cfg()
     history = get_boot_requests()
     data = {}
     for i in history:
@@ -973,6 +984,7 @@ def hosts():
 
     return flask.render_template("hosts.html", \
         entries = hosts, \
+        messages = output, \
         headings = headings, \
         title = "Hosts", \
         active = "hosts")
@@ -1239,10 +1251,11 @@ def mac_security(mac):
         return flask.make_response("The given mac address is not valid", 400)
 
     boot = get_boot_requests(limit = 1, mac = mac)
-    cfg = get_bootstrap_cfg(mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_security.html", \
         title = "%s security" % pretty_mac(mac), mac = mac, \
+        messages = output, \
         active = "hosts", subactive = "security", cfg = cfg, boot = boot, \
         pretty_mac = pretty_mac(mac))
     
@@ -1250,8 +1263,7 @@ def mac_security(mac):
 def mac_configuration(mac):
     mac = clean_mac(mac)
     templates = get_templates()
-    message = False
-    message_category = False
+    messages = []
     client = "TODO"
     repository = app.config['REPOSITORY']
     if flask.request.method == 'POST':
@@ -1261,35 +1273,41 @@ def mac_configuration(mac):
         try:
             _id = flask.request.form['id']
         except:
-            message = "All required input fields are not set, please try again."
-            message_category = 3
+            messages.append((3, "All required input fields are not set, please try again."))
         else:
-            message = "The template was not found. Please re-try."
-            message_category = 2
+            found = False
             for t in templates:
                 if t['_id'] == _id:
+                    found = True
 
                     target="ipxe"
                     content = t['content']
                     data = get_boot_requests(limit = 1, mac = mac)
                     log_message = "Template '%s' was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
-                    if inject_template(content, target, mac, log_message, data):
-                        message = "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
-                        message_category = 0
+                    (status, output) = inject_template(content, target, mac, log_message, data)
+                    if status:
+                        messages.append((0, "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))))
+                    else:
+                        for o in output:
+                            messages.append(o)
+
+            if not found:
+                messages.append((2, "The template was not found. Please re-try."))
 
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
     boot = get_boot_requests(limit = 1, mac = mac)
-    cfg = get_bootstrap_cfg(mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
+    for o in output:
+        messages.append(o)
 
     return flask.render_template("mac_configuration.html", \
         title = "%s netboot configuration" % pretty_mac(mac), mac = mac, \
         pretty_mac = pretty_mac(mac), \
         templates = templates, \
         repository = repository, \
-        message = message, \
-        message_category = message_category, \
+        messages = messages, \
         active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
@@ -1386,6 +1404,7 @@ def read_file(path):
 def get_bootstrap_cfg(mac = False):
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
+    messages = []
 
     if mac:
         if not verify_mac(mac):
@@ -1394,8 +1413,18 @@ def get_bootstrap_cfg(mac = False):
     repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
     if os.path.isdir(cache):
         (s,out,error,ret) = repo.pull()
+        if not s:
+            if error:
+                messages.append((3,error))
+            else:
+                messages.append((3,out))
     else:
         (s,out,error,ret) = repo.clone()
+        if not s:
+            if error:
+                messages.append((3,error))
+            else:
+                messages.append((3,out))
 
     data = {}
     if os.path.isdir(cache):
@@ -1421,7 +1450,7 @@ def get_bootstrap_cfg(mac = False):
                             elif f == '.htaccess':
                                 data[m]['htaccess'] = read_file(path)
             
-    return data
+    return (data,messages)
 
 #@app.route("/api/configuration/", methods = ['GET', 'POST'])
 #@app.route("/api/configuration", methods = ['GET', 'POST'])
