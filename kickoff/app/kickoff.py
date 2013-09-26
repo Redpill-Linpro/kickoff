@@ -494,10 +494,44 @@ def create_default_configuration(i):
         dolog("iPXE configuration for mac %s does already exist in %s. Aborting to avoid overwriting." % (mac, p), prefix)
         return False
 
+    # Copy default ipxe configuration
+    if status:
+        f = app.config['DEFAULT_HOST_IPXE_CONFIGURATION']
+        content = read_file(f)
+        target="ipxe"
+        message = "Added automatically by host discovery from %s" % i['client']
+        if inject_template(content, target, mac, message, i):
+            status = True
+        else:
+            status = False
+
+    # Create default htaccess configuration
+    if status:
+        f = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
+        content = read_file(f)
+        target=".htaccess"
+        message = "Added automatically by host discovery from %s" % i['client']
+        if inject_template(content, target, mac, message, i):
+            Status = True
+        else:
+            status = False
+
+    return status
+
+def inject_template(content, target, mac, log_message, data = {}):
+    path = "%s/%s/%s" % (app.config['CACHE'],pretty_mac(mac),target)
+    status = True
+
+    prefix = "inject_template"
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
-    repo = gitsh.gitsh(repository, cache)
+    repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
     basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
+
+    # Detect if it is necessary to do git add later
+    exists = False
+    if os.path.exists(path):
+         exists = True
 
     if not os.path.isdir(cache):
         try:
@@ -507,44 +541,8 @@ def create_default_configuration(i):
             dolog("Failed to clone remote repository %s to %s" % (repository, cache), prefix)
         else:
             dolog("Remote repository %s cloned to %s" % (repository, cache), prefix)
-
-    # Copy default ipxe configuration
-    if status:
-        f = app.config['DEFAULT_HOST_IPXE_CONFIGURATION']
-        content = read_file(f)
-        target="ipxe"
-        if inject_template(content, target, mac, i):
-            t = "%s/%s" % (basedir, os.path.basename(template))
-            repo.add(t)
-            repo.commit(t, message = "Added automatically by host discovery from %s" % i['client'])
-        else:
-            status = False
-
-    # Create default htaccess configuration
-    if status:
-        f = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
-        content = read_file(f)
-        target=".htaccess"
-        if inject_template(content, target, mac, i):
-            t = "%s/%s" % (basedir, os.path.basename(template))
-            repo.add(t)
-            repo.commit(t, message = "Added automatically by host discovery from %s" % i['client'])
-        else:
-            status = False
-
-    # Git push
-    if status:
-        try:
-            repo.push()
-        except:
-            status = False
-            print "Unable to push changes to remote repository %s" % (repository)
-
-    return status
-
-def inject_template(content, target, mac, data = {}):
-    path = "%s/%s/%s" % (app.config['CACHE'],pretty_mac(mac),target)
-    status = True
+    else:
+        repo.pull()
 
     dolog("Injecting template into %s" % (path), mac)
 
@@ -561,6 +559,22 @@ def inject_template(content, target, mac, data = {}):
     except:
         status = False
         dolog("Unable to inject template into %s" % (path), mac)
+
+    else:
+        try:
+            #if not exists:
+            (s,out,error,ret) = repo.add(path)
+            dolog("git add: s=%s, out=%s, error=%s, ret=%s." % (s,out,error,ret), mac)
+
+            (s,out,error,ret) = repo.commit(path, message = log_message)
+            dolog("git commit: s=%s, out=%s, error=%s, ret=%s." % (s,out,error,ret), mac)
+            (s,out,error,ret) = repo.push()
+            dolog("git push: s=%s, out=%s, error=%s, ret=%s." % (s,out,error,ret), mac)
+        except:
+            dolog("Unable to commit and push the changes the remote repository.", mac)
+            status = False
+        else:
+            dolog("The changes were commited and pushed to the remote repository.", mac)
 
     return status
 
@@ -983,7 +997,7 @@ def maintenance():
     # the configuration repository.
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
-    repo = gitsh.gitsh(repository, cache)
+    repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
     if os.path.isdir(cache):
         if repo.pull():
             out['meta'].append("Remote repository pulled successfully")
@@ -1243,9 +1257,10 @@ def mac_configuration(mac):
     templates = get_templates()
     message = False
     message_category = False
-    repository = app.config["REPOSITORY"]
-
+    client = "TODO"
+    repository = app.config['REPOSITORY']
     if flask.request.method == 'POST':
+
         # Will inject 
         status = True
         try:
@@ -1262,7 +1277,8 @@ def mac_configuration(mac):
                     target="ipxe"
                     content = t['content']
                     data = get_boot_requests(limit = 1, mac = mac)
-                    if inject_template(content, target, mac, data):
+                    log_message = "Template '%s' was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
+                    if inject_template(content, target, mac, log_message, data):
                         message = "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
                         message_category = 0
 
@@ -1380,7 +1396,7 @@ def get_bootstrap_cfg(mac = False):
         if not verify_mac(mac):
             mac = False
 
-    repo = gitsh.gitsh(repository, cache)
+    repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
     if os.path.isdir(cache):
         repo.pull()
     else:

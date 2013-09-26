@@ -9,14 +9,24 @@
 
 import os
 import re
+import logging
 import subprocess
+import datetime
 
 class gitsh():
 
-    def __init__(self, repository, cache, verbose = False):
+    def __init__(self, repository, cache, log_file = False, \
+                 log_level = logging.DEBUG, verbose = False):
+
         self.verbose = verbose
         self.repository = repository
         self.cache = cache
+        self.log_level = log_level
+
+        if log_file:
+            self.log_file = log_file
+        else:
+            self.log_file = "/tmp/gitsh.log"
 
     def init(self):
         s = False
@@ -30,13 +40,13 @@ class gitsh():
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "Repository initialized at %s" % self.cache
+            self._dolog(logging.INFO,"Repository initialized at %s" % self.cache)
             s = True
         else:
-            if self.verbose:
-                print "Failed to initialized repository at %s" % \
-                    self.cache
+            self._dolog(logging.ERROR, "Failed to initialized repository at %s" % \
+                self.cache)
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
     
         return (s,out,error,pr.returncode)
 
@@ -56,13 +66,13 @@ class gitsh():
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "Remote origin repository %s added" % remote
+            self._dolog(logging.INFO, "Remote origin repository %s added" % remote)
             s = True
         else:
-            if self.verbose:
-                print "Failed to add remote origin repository %s" % \
-                    remote
+            self._dolog(logging.ERROR, "Failed to add remote origin repository " \
+                "%s" % remote)
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
     
         return (s,out,error,pr.returncode)
 
@@ -76,22 +86,21 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            if self.verbose:
-                print "Unable to clone repository %s to %s" % \
-                      (self.repository, self.cache)
+            self._dolog(logging.ERROR, "Unable to execute git clone from " \
+                "repository %s to %s" % (self.repository, self.cache))
             return False
     
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "Repository %s cloned to %s" % \
-                    (self.repository, self.cache)
+            self._dolog(logging.INFO, "Repository %s cloned to %s" % \
+                (self.repository, self.cache))
             s = True
         else:
-            if self.verbose:
-                print "Failed to clone repository %s to %s" % \
-                    (self.repository, self.cache)
+            self._dolog(logging.ERROR, "Failed to clone repository %s to %s" % \
+                (self.repository, self.cache))
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
     
         return (s,out,error,pr.returncode)
     
@@ -105,21 +114,18 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            if self.verbose:
-                print "Unable to execute git pull"
+            self._dolog(logging.ERROR, "Unable to execute git pull")
             return False
     
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "Repository pulled %s" % \
-                    (self.cache)
+            self._dolog(logging.INFO, "Repository pulled %s" % (self.cache))
             s = True
         else:
-            if self.verbose:
-                print "Failed to pull repository %s" % \
-                    (self.cache)
+            self._dolog(logging.ERROR, "Failed to pull repository %s" % (self.cache))
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
 
         return (s,out,error,pr.returncode)
     
@@ -133,21 +139,20 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            if self.verbose:
-                print "Unable to execute git add"
+            self._dolog(logging.ERROR, "Unable to execute git add")
             return False
     
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "File %s added to repository %s" % \
-                    (path, self.cache)
+            self._dolog(logging.INFO, "File %s added to repository %s" % \
+                (path, self.cache))
             s = True
         else:
-            if self.verbose:
-                print "Failed to add %s to repository %s" % \
-                    (path, self.cache)
+            self._dolog(logging.ERROR, "Failed to add %s to repository %s" % \
+                (path, self.cache))
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
     
         return (s,out,error,pr.returncode)
        
@@ -161,21 +166,20 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            if self.verbose:
-                print "Unable to execute git commit"
+            self._dolog(logging.ERROR, "Unable to execute git commit")
             return False
     
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "File %s committed to repository %s" % \
-                    (path, self.cache)
+            self._dolog(logging.INFO, "File %s committed to repository %s" % \
+                (path, self.cache))
             s = True
         else:
-            if self.verbose:
-                print "Failed to commit %s to repository %s" % \
-                    (path, self.cache)
+            self._dolog(logging.ERROR, "Failed to commit %s to repository %s" % \
+                    (path, self.cache))
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
     
         return (s,out,error,pr.returncode)
     
@@ -189,21 +193,20 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            if self.verbose:
-                print "Unable to execute git push"
+            self._dolog(logging.ERROR, "Unable to execute git push")
             return False
     
         (out, error) = pr.communicate()
 
         if pr.returncode == 0:
-            if self.verbose:
-                print "Repository %s pushed" % \
-                    (path, self.cache)
+            self._dolog(logging.INFO, "Repository %s pushed" % \
+                    (path, self.cache))
             s = True
         else:
-            if self.verbose:
-                print "Failed to push repository %s" % \
-                    (self.cache)
+            self._dolog(logging.ERROR, "Failed to push repository %s" % \
+                    (self.cache))
+            self._dolog(logging.DEBUG, "s=%s, out=%s, error=%s, ret=%s" % \
+                (s, out, error, pr.returncode))
     
         return (s,out,error,pr.returncode)
 
@@ -227,8 +230,7 @@ class gitsh():
                    stderr=subprocess.PIPE, 
                    shell=False)
         except:
-            if self.verbose:
-                print "Unable to execute git log"
+            self._dolog(logging.ERROR, "Unable to execute git log")
             return False
     
         (out, error) = pr.communicate()
@@ -250,4 +252,19 @@ class gitsh():
         # Sort by commit date
         log = sorted(log, key=lambda k: k['committer_date']) 
         return (log,s,out,error,pr.returncode)
+
+    def _dolog(self,level,text):
+        if not self.log_file:
+            return
+
+        if not self.log_level:
+            return
+
+        logging.basicConfig(filename=self.log_file, level=self.log_level)
+    
+        now = datetime.datetime.now()
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+    
+        text = "[%s] %s" % (timestamp, text)
+        logging.log(level, text)
 
