@@ -97,9 +97,10 @@ def dbopen(collection):
     return col
 
 def get_vendor(mac):
-    path = '/vagrant/kickoff/conf/oui.txt'
+    path = app.config["OUI"]
     vendor = False
     if not os.path.isfile(path):
+        dolog("The path %s does not exist" % path, "get_vendor")
         return False
 
     # Need dashes as part of the address
@@ -936,7 +937,7 @@ def templates_new():
                     dolog("Unable to insert template into db", prefix)
                     messages.append((3, "Failed to write the changes to the database."))
                 else:
-                    dolog("Template %s written to the database successfully" % name)
+                    dolog("Template '%s' written to the database successfully" % name)
                     messages.append((0, "The changes have been written to the database."))
     
     return flask.render_template("templates_modify.html", \
@@ -1284,7 +1285,7 @@ def mac_configuration(mac):
                     target="ipxe"
                     content = t['content']
                     data = get_boot_requests(limit = 1, mac = mac)
-                    log_message = "Template %s was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
+                    log_message = "Template '%s' was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
                     (status, output) = inject_template(content, target, mac, log_message, data)
                     if status:
                         messages.append((0, "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))))
