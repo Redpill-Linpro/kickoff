@@ -521,10 +521,10 @@ def inject_template(content, target, mac, log_message, data = {}):
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
     repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
-    basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
+    #basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
 
     # Detect if it is necessary to do git add later
-    exists = False
+    Exists = False
     if os.path.exists(path):
          exists = True
 
@@ -555,6 +555,7 @@ def inject_template(content, target, mac, log_message, data = {}):
 
         t = open(path,'w')
         t.write(content)
+        t.close()
 
     except:
         status = False
@@ -1283,7 +1284,7 @@ def mac_configuration(mac):
                     target="ipxe"
                     content = t['content']
                     data = get_boot_requests(limit = 1, mac = mac)
-                    log_message = "Template '%s' was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
+                    log_message = "Template %s was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
                     (status, output) = inject_template(content, target, mac, log_message, data)
                     if status:
                         messages.append((0, "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))))

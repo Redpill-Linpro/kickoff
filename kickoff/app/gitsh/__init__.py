@@ -185,7 +185,8 @@ class gitsh():
             self._dolog(logging.ERROR, "Failed to commit %s to repository %s" % \
                     (path, self.cache))
             self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, " \
-                "stderr=%s, retcode=%s" % (s, " ".join(cmd), out, error, pr.returncode))
+                "stderr=%s, retcode=%s, cwd=%s" % (s, " ".join(cmd), out, \
+                error, pr.returncode, self.cache))
     
         return (s,out,error,pr.returncode)
     
