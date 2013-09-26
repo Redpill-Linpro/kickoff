@@ -535,14 +535,14 @@ def inject_template(content, target, mac, log_message, data = {}):
 
     if not os.path.isdir(cache):
         try:
-            repo.clone()
+            (s,out,error,ret) = repo.clone()
         except:
             status = False
             dolog("Failed to clone remote repository %s to %s" % (repository, cache), prefix)
         else:
             dolog("Remote repository %s cloned to %s" % (repository, cache), prefix)
     else:
-        repo.pull()
+        (s,out,error,ret) = repo.pull()
 
     dolog("Injecting template into %s" % (path), mac)
 
@@ -562,14 +562,9 @@ def inject_template(content, target, mac, log_message, data = {}):
 
     else:
         try:
-            #if not exists:
             (s,out,error,ret) = repo.add(path)
-            dolog("git add: s=%s, out=%s, error=%s, ret=%s." % (s,out,error,ret), mac)
-
             (s,out,error,ret) = repo.commit(path, message = log_message)
-            dolog("git commit: s=%s, out=%s, error=%s, ret=%s." % (s,out,error,ret), mac)
             (s,out,error,ret) = repo.push()
-            dolog("git push: s=%s, out=%s, error=%s, ret=%s." % (s,out,error,ret), mac)
         except:
             dolog("Unable to commit and push the changes the remote repository.", mac)
             status = False
@@ -1398,9 +1393,9 @@ def get_bootstrap_cfg(mac = False):
 
     repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
     if os.path.isdir(cache):
-        repo.pull()
+        (s,out,error,ret) = repo.pull()
     else:
-        repo.clone()
+        (s,out,error,ret) = repo.clone()
 
     data = {}
     if os.path.isdir(cache):
