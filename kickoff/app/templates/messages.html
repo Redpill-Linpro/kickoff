@@ -1,0 +1,27 @@
+
+{% if messages %}
+  {% if messages|count > 0 %}
+    {% for m in messages %}
+      {% if m[1] %}
+        {% if m[0] == 0 %}
+          <div class="alert alert-success">
+          <strong>Success!</strong>
+        {% elif m[0] == 1 %}
+          <div class="alert alert-info">
+          <strong>Info!</strong>
+        {% elif m[0] == 2 %}
+          <div class="alert alert-warning">
+          <strong>Warning!</strong>
+        {% elif m[0] == 3 %}
+          <div class="alert alert-danger">
+          <strong>Error!</strong>
+        {% else %}
+          <div class="alert alert-success">
+        {% endif %}
+        {{ m[1] }}
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endif %}
+
