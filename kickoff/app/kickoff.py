@@ -563,32 +563,31 @@ def inject_template(content, target, mac, log_message, data = {}):
         dolog("Unable to inject template into %s" % (path), mac)
 
     else:
-        try:
-            (s,out,error,ret) = repo.add(path)
-            if not s:
-                if error:
-                    messages.append((3,error))
-                else:
-                    messages.append((3,out))
-
-            (s,out,error,ret) = repo.commit(path, message = log_message)
-            if not s:
-                if error:
-                    messages.append((3,error))
-                else:
-                    messages.append((3,out))
-
-            (s,out,error,ret) = repo.push()
-            if not s:
-                if error:
-                    messages.append((3,error))
-                else:
-                    messages.append((3,out))
-
-        except:
-            dolog("Unable to commit and push the changes the remote repository.", mac)
+        (s,out,error,ret) = repo.add(path)
+        if not s:
             status = False
-        else:
+            if error:
+                messages.append((3,error))
+            else:
+                messages.append((3,out))
+
+        (s,out,error,ret) = repo.commit(path, message = log_message)
+        if not s:
+            status = False
+            if error:
+                messages.append((3,error))
+            else:
+                messages.append((3,out))
+
+        (s,out,error,ret) = repo.push()
+        if not s:
+            status = False
+            if error:
+                messages.append((3,error))
+            else:
+                messages.append((3,out))
+
+        if status:
             dolog("The changes were commited and pushed to the remote repository.", mac)
 
     return (status, messages)
@@ -1285,6 +1284,9 @@ def mac_configuration(mac):
                     target="ipxe"
                     content = t['content']
                     data = get_boot_requests(limit = 1, mac = mac)
+                    if len(data) == 1:
+                        data = data[0]
+
                     log_message = "Template '%s' was injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))
                     (status, output) = inject_template(content, target, mac, log_message, data)
                     if status:
