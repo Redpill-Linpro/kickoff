@@ -138,7 +138,7 @@ class gitsh():
     
         try:
             cmd = ['git', 'add', path]
-            pr = subproceYss.Popen(cmd,
+            pr = subprocess.Popen(cmd,
                    cwd=self.cache,
                    stdout=subprocess.PIPE, 
                    stderr=subprocess.PIPE, 
