@@ -208,7 +208,7 @@ class gitsh():
 
         if pr.returncode == 0:
             self._dolog(logging.INFO, "Repository %s pushed" % \
-                    (path, self.cache))
+                    (self.cache))
             s = True
         else:
             self._dolog(logging.ERROR, "Failed to push repository %s" % \
