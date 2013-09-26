@@ -522,12 +522,6 @@ def inject_template(content, target, mac, log_message, data = {}):
     repository = app.config['REPOSITORY']
     cache = app.config['CACHE']
     repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
-    #basedir = "%s/%s" % (app.config['CACHE'],pretty_mac(mac))
-
-    # Detect if it is necessary to do git add later
-    Exists = False
-    if os.path.exists(path):
-         exists = True
 
     if not os.path.isdir(cache):
         try:
@@ -589,6 +583,8 @@ def inject_template(content, target, mac, log_message, data = {}):
 
         if status:
             dolog("The changes were commited and pushed to the remote repository.", mac)
+        else:
+            dolog("Something failed when injecting template.", mac)
 
     return (status, messages)
 
