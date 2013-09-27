@@ -63,6 +63,12 @@
               {% else %}
                 {{ e[h.id] }}
               {% endif %}
+            {% elif h.id == 'host' %}
+              {% if e[h.id] %}
+                <a href="http://{{ e[h.id] }}/bootstrap/{{ e.mac }}/ipxe">
+                  {{ e[h.id] }}
+                </a>
+              {% endif %}
             {% else %}
               {{ e[h.id] }}
             {% endif %}
