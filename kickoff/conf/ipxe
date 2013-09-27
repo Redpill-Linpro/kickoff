@@ -3,8 +3,9 @@
 # configuration must default to boot from local device.
 
 echo 
-echo This host is is not configured for netbooting.
-echo Please go to http://boot-master.i.bitbit.net/ to configure it if needed.
+echo This host ${mac:hexhyp} is is not configured for netbooting.
+echo Please go to http://boot-master.i.bitbit.net/mac/${mac:hexraw} 
+echo to configure it if needed.
 echo 
 echo Skipping to the next boot device according to the BIOS Boot Order.
 echo 
