@@ -500,7 +500,7 @@ def create_default_configuration(i):
         f = app.config['DEFAULT_HOST_IPXE_CONFIGURATION']
         content = read_file(f)
         target="ipxe"
-        message = "Added automatically by host discovery from %s" % i['client']
+        message = "Added ipxe configuration automatically by host discovery from %s" % i['client']
         (status, output) = inject_template(content, target, mac, message, i)
 
     # Create default htaccess configuration
@@ -508,7 +508,7 @@ def create_default_configuration(i):
         f = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
         content = read_file(f)
         target=".htaccess"
-        message = "Added automatically by host discovery from %s" % i['client']
+        message = "Added htaccess configuration automatically by host discovery from %s" % i['client']
         (status, output) = inject_template(content, target, mac, message, i)
 
     return status
@@ -1339,7 +1339,8 @@ def mac_configuration_edit(mac):
                 data = data[0]
 
             if status:
-                log_message = "The netboot configuration for '%s' was manually edited" % (pretty_mac(mac))
+                log_message = "The netboot configuration for '%s' was " \
+                              "manually edited" % (pretty_mac(mac))
                 (status, output) = inject_template(content, target, mac, log_message, data)
                 if status:
                     messages.append((0, "The netboot configuration for %s was updated" % (pretty_mac(mac))))
