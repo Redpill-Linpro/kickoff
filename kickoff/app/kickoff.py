@@ -1329,18 +1329,23 @@ def mac_configuration_edit(mac):
         except:
             messages.append((3, "All required input fields are not set, please try again."))
         else:
+            if len(content) < 3:
+                messages.append((2, "The content of the template is too short."))
+                status = False
+
             target="ipxe"
             data = get_boot_requests(limit = 1, mac = mac)
             if len(data) == 1:
                 data = data[0]
 
-            log_message = "The netboot configuration for '%s' was manually edited" % (pretty_mac(mac))
-            (status, output) = inject_template(content, target, mac, log_message, data)
             if status:
-                messages.append((0, "The template '%s' was successfully injected to the netboot configuration for %s" % (t['name'], pretty_mac(mac))))
-            else:
-                for o in output:
-                    messages.append(o)
+                log_message = "The netboot configuration for '%s' was manually edited" % (pretty_mac(mac))
+                (status, output) = inject_template(content, target, mac, log_message, data)
+                if status:
+                    messages.append((0, "The netboot configuration for %s was updated" % (pretty_mac(mac))))
+                else:
+                    for o in output:
+                        messages.append(o)
 
     boot = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
@@ -1351,7 +1356,7 @@ def mac_configuration_edit(mac):
         title = "%s netboot configuration modification" % pretty_mac(mac), mac = mac, \
         pretty_mac = pretty_mac(mac), \
         messages = messages, \
-        active = "hosts", subactive = "edit", cfg = cfg, boot = boot)
+        active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
 
 @app.route("/mac/<mac>/history")
 def mac_history(mac):
