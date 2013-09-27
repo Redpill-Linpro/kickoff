@@ -442,11 +442,15 @@ def humanize_date_difference(now, otherdate=None, offset=None):
     else:
         return "%ds" % delta_s
 
-def is_boot_request(request):
+def is_boot_request(request, useragent):
     r = re.compile('^GET\s+\/bootstrap\/(([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2}))\/ipxe\s+HTTP\/[0-9]+\.[0-9]+$')
-    m = r.match(request)
-    if m:
-        mac = m.group(1)
+    u = re.compile('^iPXE.*$')
+
+    rm = r.match(request)
+    um = u.match(useragent)
+
+    if rm and um:
+        mac = rm.group(1)
         return mac
     else:
         #dolog("Request %s is not a boot request" % request)
@@ -590,7 +594,8 @@ def inject_template(content, target, mac, log_message, data = {}):
 
 def process_log_data(data,checksum,host):
     request = data['%r']
-    mac = is_boot_request(request)
+    useragent = data['%{User-Agent}i']
+    mac = is_boot_request(request, useragent)
     prefix = "process_log_data"
     if mac:
         if not log_data_exists(checksum):
@@ -599,12 +604,12 @@ def process_log_data(data,checksum,host):
             i['_id'] = checksum
             i['host'] = host
             i['request'] = request
+            i['useragent'] = useragent
             i['status'] = int(data['%>s'])
             i['byte'] = data['%b']
             i['client'] = data['%h']
 
             i['timestamp'] = data['%t']
-            i['useragent'] = data['%{User-Agent}i']
             i['referer'] = data['%{Referer}i']
             i['mac'] = clean_mac(mac)
 
