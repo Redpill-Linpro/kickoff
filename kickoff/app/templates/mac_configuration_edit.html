@@ -1,0 +1,36 @@
+{% include "header.html" %}
+
+{% include "mac_menu.html" %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h2>Edit netboot configuration</h2>
+  </div>
+</div>
+
+{% include "messages.html" %}
+
+<form class="form-horizontal" role="form" method="POST" action="">
+  <div class="form-group">
+    <label for="content" class="col-lg-2 control-label">iPXE</label>
+    <div class="col-lg-8">
+      <textarea name="content" id="content" cols="100" rows="10" {% if not cfg[mac].ipxe %}placeholder="#!ipxe"{% endif %}>{% if cfg[mac].ipxe %}{{ cfg[mac].ipxe }}{% endif %}</textarea>
+      <div>Reference documentation: <a href="http://ipxe.org/scripting">Scripting guide</a> and <a href="http://ipxe.org/cmd">command reference</a>.</div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <button type="submit" class="btn btn-default">
+        Save
+      </button>
+
+      <a href="/mac/{{ mac }}/configuration" class="btn btn-default">
+        Cancel
+      </a>
+    </div>
+  </div>
+</form>
+
+{% include "footer.html" %}
+
