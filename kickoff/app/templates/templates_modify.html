@@ -53,7 +53,9 @@
       {% endif %}
       </button>
 
-      <a href="/templates" class="btn btn-default">Back</a>
+      {% if _id %}
+        <a href="/templates" class="btn btn-default">Back</a>
+      {% endif %}
     </div>
   </div>
 </form>
