@@ -1238,7 +1238,7 @@ def history():
 @app.route("/mac/<mac>")
 @app.route("/mac/<mac>/")
 def mac(mac):
-    return flask.redirect('/mac/%s/history' % mac)
+    return flask.redirect('/mac/%s/configuration' % mac)
 
 @app.route("/mac/<mac>/security", methods = ['GET', 'POST'])
 def mac_security(mac):
