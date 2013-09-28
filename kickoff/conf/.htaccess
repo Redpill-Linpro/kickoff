@@ -4,4 +4,5 @@ allow from ##client##
 # The privileged network
 allow from 87.238.42.0/26
 
+# Deny everyone else by default
 deny from all
