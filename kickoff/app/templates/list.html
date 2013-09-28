@@ -65,7 +65,7 @@
               {% endif %}
             {% elif h.id == 'host' %}
               {% if e[h.id] %}
-                <a href="http://{{ e[h.id] }}/bootstrap/{{ e.pretty_mac }}/ipxe">
+                <a rel="tooltip" title="Click to show the current netboot configuration for {{ e.pretty_mac }} on {{ e[h.id] }}. Review the security filters if you do not have access." href="http://{{ e[h.id] }}/bootstrap/{{ e.pretty_mac }}/ipxe">
                   {{ e[h.id] }}
                 </a>
               {% endif %}
