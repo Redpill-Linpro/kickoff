@@ -40,6 +40,8 @@
                 <a href="/mac/{{ e.mac }}">
                   {{ e[h.id] }}
                 </a>
+              {% else %}
+                <span class="label label-info">Lookup failed</span>
               {% endif %}
             {% elif h.id == 'client' %}
               {% if e[h.id] %}
