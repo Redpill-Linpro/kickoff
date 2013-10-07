@@ -4,7 +4,7 @@
       {% for h in headings %}
         <th>
           {% if h.id == 'age' %}
-            <span rel="tooltip" title="Time since last boot request" class="glyphicon glyphicon-time"></span>
+            <span rel="tooltip" title="Time since the boot request" class="glyphicon glyphicon-time"></span>
           {% else %}
             {{ h.pretty }}
           {% endif %}
