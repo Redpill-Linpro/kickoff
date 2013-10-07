@@ -1,14 +1,16 @@
 <table class="table table-hover">
   <thead>
-    {% for h in headings %}
-      <th>
-        {% if h.id == 'age' %}
-          <span class="glyphicon glyphicon-time"></span>
-        {% else %}
-          {{ h.pretty }}
-        {% endif %}
-      </th>
-    {% endfor %}
+    <tr>
+      {% for h in headings %}
+        <th>
+          {% if h.id == 'age' %}
+            <span rel="tooltip" title="Time since last boot request" class="glyphicon glyphicon-time"></span>
+          {% else %}
+            {{ h.pretty }}
+          {% endif %}
+        </th>
+      {% endfor %}
+    </tr>
   </thead>
   <tbody>
     {% for e in entries %}
