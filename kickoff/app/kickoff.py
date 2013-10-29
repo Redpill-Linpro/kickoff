@@ -788,6 +788,8 @@ def get_templates():
         dolog("Unable to get templates from the database: %s" % (q), prefix)
     else:
         for i in cursor:
+            i['_id'] = str(i['_id'])
+
             if 'registered' in i:
                 dt = epoch_to_dt(i['registered'])
                 i['registered_age'] = humanize_date_difference(dt,now)
@@ -795,7 +797,6 @@ def get_templates():
             if 'updated' in i:
                 dt = epoch_to_dt(i['updated'])
                 i['updated_age'] = humanize_date_difference(dt,now)
-                i['_id'] = str(i['_id'])
 
             templates.append(i)
 
