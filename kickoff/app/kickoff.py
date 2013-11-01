@@ -1335,7 +1335,7 @@ def mac_security_edit(mac):
         title = "%s netboot security filter modification" % pretty_mac(mac), mac = mac, \
         pretty_mac = pretty_mac(mac), \
         messages = messages, \
-        active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
+        active = "hosts", subactive = "security", cfg = cfg, boot = boot)
     
 @app.route("/mac/<mac>/configuration", methods = ['POST', 'GET'])
 def mac_configuration(mac):
