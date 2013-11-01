@@ -5,20 +5,22 @@
 </div>
 
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-5">
     <h2 class="text-center">Recent boot history</h2>
     {% include "list.html" %}
 
     <p class="text-center"><a href="/history?status=-404"><button type="button" class="btn btn-default">More ...</button></a></p>
  </div>
-  <div class="col-md-6">
+  <div class="col-md-7">
     <h2 class="text-center">Discovered hosts</h2>
     <table class="table table-hover">
       <thead>
-        <th><span class="glyphicon glyphicon-time"></span></th>
-        <th>MAC</th>
-        <th>DNS PTR</th>
-        <th>IP</th>
+        <tr>
+          <th><span rel="tooltip" title="Time since discovery" class="glyphicon glyphicon-time"></span></th>
+          <th>MAC</th>
+          <th>DNS PTR</th>
+          <th>IP</th>
+        </tr>
       </thead>
       <tbody>
       {% for e in unknown %}
@@ -49,12 +51,12 @@
                 {{ e.client_ptr }}
               </a>
             {% else %}
-              <span class="label label-warning">Lookup failed</span>
+              <span class="label label-info">Lookup failed</span>
             {% endif %}
           </td>
           <td>
             <a href="/mac/{{ e.mac }}">
-              <small>{{ e.client }}</small>
+              {{ e.client }}
             </a>
           </td>
         </tr>

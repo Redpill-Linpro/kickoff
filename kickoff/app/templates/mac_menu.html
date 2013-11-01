@@ -8,7 +8,7 @@
       by unknown vendor.
     {% endif %}
     {% if boot.0.domain and boot.0.client_ptr %}
-      <p class="lead">DNS PTR {{ boot.0.client_ptr }} in group <a href="/domain/{{ boot.0.domain }}">{{ boot.0.domain}}</a>.</p>
+      <p class="lead">DNS PTR {{ boot.0.client_ptr }} in domain <a href="/domain/{{ boot.0.domain }}">{{ boot.0.domain}}</a>.</p>
     {% else %}
       <p class="lead">Reverse lookup {{ boot.0.client }} failed.</p>
     {% endif %}
