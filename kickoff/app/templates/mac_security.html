@@ -29,11 +29,13 @@
 <div class="row">
   <div class="col-lg-4">
     <h4>Re-inject</h4>
-    <p>You can overwrite the current filter by re-injecting the default template with the address used in the last request.
+    <p>You can overwrite the current filter by re-injecting the default template with the address used in the last request.</p>
     <form class="form-horizontal" role="form" method="POST" action="">
       <div class="form-group">
-        <input type="hidden" name="mac" value="{{ mac }}"/>
-        <input type="submit" class="btn btn-primary" value="Inject"/>
+        <div class="col-lg-8">
+          <input type="hidden" name="mac" value="{{ mac }}"/>
+          <input type="submit" class="btn btn-primary" value="Inject"/>
+        </div>
       </div>
     </form>
   </div>
