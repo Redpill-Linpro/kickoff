@@ -1249,6 +1249,8 @@ def mac(mac):
 @app.route("/mac/<mac>/security", methods = ['GET', 'POST'])
 def mac_security(mac):
     mac = clean_mac(mac)
+    messages = []
+    client = "TODO"
 
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
