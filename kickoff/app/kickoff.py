@@ -1252,6 +1252,33 @@ def mac_security(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
+    if flask.request.method == 'POST':
+
+        # Will inject 
+        status = True
+        try:
+            mac = flask.request.form['mac']
+        except:
+            messages.append((3, "All required input fields are not set, please try again."))
+        else:
+            mac = clean_mac(mac)
+
+            if mac:
+                target=".htaccess"
+                f = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
+                content = read_file(f)
+                data = get_boot_requests(limit = 1, mac = mac)
+                if len(data) == 1:
+                    data = data[0]
+
+                log_message = "The default template was injected to the netboot security filter for %s" % (pretty_mac(mac))
+                (status, output) = inject_template(content, target, mac, log_message, data)
+                if status:
+                    messages.append((0, "The template was successfully injected to the netboot security filter for %s" % (pretty_mac(mac))))
+                else:
+                    for o in output:
+                        messages.append(o)
+
     boot = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
 
@@ -1260,6 +1287,54 @@ def mac_security(mac):
         messages = output, \
         active = "hosts", subactive = "security", cfg = cfg, boot = boot, \
         pretty_mac = pretty_mac(mac))
+
+@app.route("/mac/<mac>/security/edit", methods = ['POST', 'GET'])
+def mac_security_edit(mac):
+    mac = clean_mac(mac)
+    messages = []
+    client = "TODO"
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    if flask.request.method == 'POST':
+
+        # Will inject 
+        status = True
+        try:
+            content = flask.request.form['content']
+        except:
+            messages.append((3, "All required input fields are not set, please try again."))
+        else:
+            if len(content) < 3:
+                messages.append((2, "The content of the template is too short."))
+                status = False
+
+            target=".htaccess"
+            data = get_boot_requests(limit = 1, mac = mac)
+            if len(data) == 1:
+                data = data[0]
+
+            if status:
+                log_message = "The netboot security filter for '%s' was " \
+                              "manually edited" % (pretty_mac(mac))
+                (status, output) = inject_template(content, target, mac, log_message, data)
+                if status:
+                    messages.append((0, "The netboot security filter for %s was updated" % (pretty_mac(mac))))
+                else:
+                    for o in output:
+                        messages.append(o)
+
+    boot = get_boot_requests(limit = 1, mac = mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
+    for o in output:
+        messages.append(o)
+
+    return flask.render_template("mac_security_edit.html", \
+        title = "%s netboot security filter modification" % pretty_mac(mac), mac = mac, \
+        pretty_mac = pretty_mac(mac), \
+        messages = messages, \
+        active = "hosts", subactive = "configuration", cfg = cfg, boot = boot)
     
 @app.route("/mac/<mac>/configuration", methods = ['POST', 'GET'])
 def mac_configuration(mac):
