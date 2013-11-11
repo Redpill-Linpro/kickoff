@@ -15,7 +15,7 @@ file {
     '/var/log/kickoff_slaves':
         ensure => directory,
         owner  => 'root',
-        owner  => 'root';
+        group  => 'root';
     '/var/log/kickoff':
         ensure => directory,
         owner  => 'www-data',
