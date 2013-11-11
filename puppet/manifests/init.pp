@@ -41,11 +41,6 @@ file {
         require => File['/srv/www'],
         notify  => Service['nginx'],
         target  => '/vagrant/kickoff';
-    '/var/log/kickoff_slaves':
-        ensure  => link,
-        require => File['/var/log/kickoff_slaves'],
-        notify  => Service['nginx'],
-        target  => '/vagrant/replica_dir';
     '/etc/logrotate.d/kickoff':
         mode    => "0444",
         owner   => "root",
