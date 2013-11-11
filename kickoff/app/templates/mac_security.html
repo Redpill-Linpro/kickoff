@@ -4,7 +4,7 @@
 
 <div class="row">
   <div class="col-md-12">
-    <h2>Security filters</h2>
+    <h2>Security filter</h2>
   </div>
 </div>
 
@@ -22,6 +22,37 @@
     {% else %}
       <p class="lead">No configuration was found for this mac address.</p>
     {% endif %}
+  </div>
+</div>
+
+<p class="lead">Modify the current security filter using one of the methods below.</p>
+<div class="row">
+  <div class="col-lg-4">
+    <h4>Re-inject</h4>
+    <p>You can overwrite the current filter by re-injecting the default template with the address used in the last request.</p>
+    <form class="form-horizontal" role="form" method="POST" action="">
+      <div class="form-group">
+        <div class="col-lg-8">
+          <input type="hidden" name="mac" value="{{ mac }}"/>
+          <input type="submit" class="btn btn-primary" value="Inject"/>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-4">
+    <h4>HTML editor</h4>
+    <p>The filter can be modified using a simple html editor for more flexibility than the template.</p>
+    <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <div class="col-lg-4">
+          <a href="/mac/{{ mac }}/security/edit" class="btn btn-primary">Edit &raquo;</a>
+        </div>
+      </div>
+    </form>
+ </div>
+  <div class="col-lg-4">
+    <h4>Git</h4>
+    <p>This web application is using the {{ repository }} repository to store configuration. Netboot configuration can therefore be modified using git directly for complete flexibility.</p>
   </div>
 </div>
 
