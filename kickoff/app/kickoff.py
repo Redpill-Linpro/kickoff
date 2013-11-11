@@ -667,6 +667,13 @@ def get_discovered_hosts(limit = False, uniqe = True):
 
     return res
 
+def verify_date(date):
+    r = re.compile('^\d{4}-\d{2}-\d{2}$')
+    if r.match(date):
+        return True
+    else
+        return False
+
 def get_boot_requests(mac = False, first = 0, limit = False, status = []):
     res = []
     now = datetime.datetime.now()
@@ -1052,7 +1059,7 @@ def maintenance():
                         lines += 1
                         fp.seek(0, 0)
 
-                        dolog("Log: %s (%d lines)" % (f,lines), prefix)
+                        #dolog("Log: %s (%d lines)" % (f,lines), prefix)
 
                         for i,line in enumerate(fp):
                             try:
@@ -1140,7 +1147,13 @@ def domain(domain):
 
 @app.route("/history/")
 @app.route("/history")
-def history():
+
+@app.route("/history/<date>/")
+@app.route("/history/<date>")
+def history_date(date):
+    if not verify_date(date):
+        return flask.redirect('/history')
+
     history = get_boot_requests()
     data = []
     #domains = []
