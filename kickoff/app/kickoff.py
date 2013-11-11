@@ -1147,12 +1147,12 @@ def domain(domain):
 
 @app.route("/history/")
 @app.route("/history")
+def history():
 
-@app.route("/history/<date>/")
-@app.route("/history/<date>")
-def history_date(date):
-    if not verify_date(date):
-        return flask.redirect('/history')
+#@app.route("/history/<date>/")
+#@app.route("/history/<date>")
+#    if not verify_date(date):
+#        return flask.redirect('/history')
 
     history = get_boot_requests()
     data = []
