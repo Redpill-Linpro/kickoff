@@ -1028,7 +1028,7 @@ def maintenance():
     p = apachelog.parser(log_format)
     for host in os.listdir(logdir):
         path = "%s/%s" % (logdir,host)
-        dolog("Processing logs from directory %s" % path, prefix)
+        #dolog("Processing logs from directory %s" % path, prefix)
         if os.path.isdir(path):
             if not host in out:
                 out[host] = {}
