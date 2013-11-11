@@ -16,6 +16,10 @@ file {
         ensure => directory,
         owner  => 'root',
         owner  => 'root';
+    '/var/log/kickoff':
+        ensure => directory,
+        owner  => 'www-data',
+        owner  => 'www-data';
     '/etc/motd':
         content => "\nThis is the kickoff build environment\n\n";
     '/etc/nginx/sites-enabled/default': 
@@ -42,6 +46,11 @@ file {
         require => File['/var/log/kickoff_slaves'],
         notify  => Service['nginx'],
         target  => '/vagrant/replica_dir';
+    '/etc/logrotate.d/kickoff':
+        mode    => "0444",
+        owner   => "root",
+        group   => "root",
+        content => "/var/log/kickoff/*log {\ndaily\nrotate 90\ncopytruncate\ndelaycompress\n}";
 }
 
 Service {
