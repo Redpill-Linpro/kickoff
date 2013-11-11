@@ -19,7 +19,7 @@ file {
     '/var/log/kickoff':
         ensure => directory,
         owner  => 'www-data',
-        owner  => 'www-data';
+        group  => 'www-data';
     '/etc/motd':
         content => "\nThis is the kickoff build environment\n\n";
     '/etc/nginx/sites-enabled/default': 
