@@ -957,7 +957,7 @@ def templates_new():
 @app.route("/hosts/")
 @app.route("/hosts")
 def hosts():
-    (cfg,output) = get_bootstrap_cfg()
+    (cfg, output) = get_bootstrap_cfg()
     history = get_boot_requests()
     data = {}
     for i in history:
@@ -1561,15 +1561,19 @@ def get_bootstrap_cfg(mac = False):
         if not s:
             if error:
                 messages.append((3,error))
-            else:
+            elif out:
                 messages.append((3,out))
+            else:
+                messages.append((3,"Unable to pull the remote repository"))
     else:
         (s,out,error,ret) = repo.clone()
         if not s:
             if error:
                 messages.append((3,error))
-            else:
+            elif out:
                 messages.append((3,out))
+            else:
+                messages.append((3,"Unable to clone the repository"))
 
     data = {}
     if os.path.isdir(cache):

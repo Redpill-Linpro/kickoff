@@ -80,6 +80,9 @@ class gitsh():
 
     def clone(self):
         s = False
+        out = False
+        error = False
+        ret = False
     
         try:
             cmd = ['git', 'clone', self.repository, self.cache]
@@ -91,24 +94,29 @@ class gitsh():
         except:
             self._dolog(logging.ERROR, "Unable to execute git clone from " \
                 "repository %s to %s" % (self.repository, self.cache))
-            return False
     
-        (out, error) = pr.communicate()
-
-        if pr.returncode == 0:
-            self._dolog(logging.INFO, "Repository %s cloned to %s" % \
-                (self.repository, self.cache))
-            s = True
         else:
-            self._dolog(logging.ERROR, "Failed to clone repository %s to %s" % \
-                (self.repository, self.cache))
-            self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
-                (s, " ".join(cmd), out, error, pr.returncode))
+            (out, error) = pr.communicate()
+            ret = pr.returncode
+
+            if ret == 0:
+                self._dolog(logging.INFO, "Repository %s cloned to %s" % \
+                    (self.repository, self.cache))
+                s = True
+            else:
+                self._dolog(logging.ERROR, "Failed to clone repository %s to " \
+                    "%s" % (self.repository, self.cache))
+                self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, " \
+                    "stderr=%s, retcode=%s" % \
+                    (s, " ".join(cmd), out, error, ret))
     
-        return (s,out,error,pr.returncode)
+        return (s,out,error,ret)
     
     def pull(self):
         s = False
+        out = False
+        error = False
+        ret = False
     
         try:
             cmd = ['git', 'pull']
@@ -121,20 +129,25 @@ class gitsh():
             self._dolog(logging.ERROR, "Unable to execute git pull")
             return False
     
-        (out, error) = pr.communicate()
-
-        if pr.returncode == 0:
-            self._dolog(logging.INFO, "Repository pulled %s" % (self.cache))
-            s = True
         else:
-            self._dolog(logging.ERROR, "Failed to pull repository %s" % (self.cache))
-            self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
-                (s, " ".join(cmd), out, error, pr.returncode))
+            (out, error) = pr.communicate()
+            ret = pr.returncode
 
-        return (s,out,error,pr.returncode)
+            if ret == 0:
+                self._dolog(logging.INFO, "Repository pulled %s" % (self.cache))
+                s = True
+            else:
+                self._dolog(logging.ERROR, "Failed to pull repository %s" % (self.cache))
+                self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
+                    (s, " ".join(cmd), out, error, ret))
+
+        return (s,out,error,ret)
     
     def add(self, path):
         s = False
+        out = False
+        error = False
+        ret = False
     
         try:
             cmd = ['git', 'add', path]
@@ -147,22 +160,27 @@ class gitsh():
             self._dolog(logging.ERROR, "Unable to execute git add")
             return False
     
-        (out, error) = pr.communicate()
-
-        if pr.returncode == 0:
-            self._dolog(logging.INFO, "File %s added to repository %s" % \
-                (path, self.cache))
-            s = True
         else:
-            self._dolog(logging.ERROR, "Failed to add %s to repository %s" % \
-                (path, self.cache))
-            self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
-                (s, " ".join(cmd), out, error, pr.returncode))
+            (out, error) = pr.communicate()
+
+            ret = pr.returncode
+            if ret == 0:
+                self._dolog(logging.INFO, "File %s added to repository %s" % \
+                    (path, self.cache))
+                s = True
+            else:
+                self._dolog(logging.ERROR, "Failed to add %s to repository %s" % \
+                    (path, self.cache))
+                self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
+                    (s, " ".join(cmd), out, error, ret))
     
-        return (s,out,error,pr.returncode)
+        return (s,out,error,ret)
        
     def commit(self, path, message = "Not set"):
         s = False
+        out = False
+        error = False
+        ret = False
 
         try:
             cmd = ['git', 'commit', '-m', message, path]
@@ -175,23 +193,28 @@ class gitsh():
             self._dolog(logging.ERROR, "Unable to execute git commit")
             return False
     
-        (out, error) = pr.communicate()
-
-        if pr.returncode == 0:
-            self._dolog(logging.INFO, "File %s committed to repository %s" % \
-                (path, self.cache))
-            s = True
         else:
-            self._dolog(logging.ERROR, "Failed to commit %s to repository %s" % \
+            (out, error) = pr.communicate()
+            ret = pr.returncode
+
+            if pr.returncode == 0:
+                self._dolog(logging.INFO, "File %s committed to repository %s" % \
                     (path, self.cache))
-            self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, " \
-                "stderr=%s, retcode=%s, cwd=%s" % (s, " ".join(cmd), out, \
-                error, pr.returncode, self.cache))
+                s = True
+            else:
+                self._dolog(logging.ERROR, "Failed to commit %s to repository %s" % \
+                        (path, self.cache))
+                self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, " \
+                    "stderr=%s, retcode=%s, cwd=%s" % (s, " ".join(cmd), out, \
+                    error, ret, self.cache))
     
-        return (s,out,error,pr.returncode)
+        return (s,out,error,ret)
     
     def push(self):
         s = False
+        out = False
+        error = False
+        ret = False
 
         try:
             cmd = ['git', 'push', '-u', 'origin', 'master']
@@ -204,22 +227,27 @@ class gitsh():
             self._dolog(logging.ERROR, "Unable to execute git push")
             return False
     
-        (out, error) = pr.communicate()
-
-        if pr.returncode == 0:
-            self._dolog(logging.INFO, "Repository %s pushed" % \
-                    (self.cache))
-            s = True
         else:
-            self._dolog(logging.ERROR, "Failed to push repository %s" % \
-                    (self.cache))
-            self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
-                (s, " ".join(cmd), out, error, pr.returncode))
+            (out, error) = pr.communicate()
+            ret = pr.returncode
+
+            if ret == 0:
+                self._dolog(logging.INFO, "Repository %s pushed" % \
+                        (self.cache))
+                s = True
+            else:
+                self._dolog(logging.ERROR, "Failed to push repository %s" % \
+                        (self.cache))
+                self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
+                    (s, " ".join(cmd), out, error, ret))
     
-        return (s,out,error,pr.returncode)
+        return (s,out,error,ret)
 
     def log(self):
         s = False
+        out = False
+        error = False
+        ret = False
         log = []
     
         try:
@@ -242,31 +270,34 @@ class gitsh():
             self._dolog(logging.ERROR, "Unable to execute git log")
             return False
     
-        (out, error) = pr.communicate()
-
-        if pr.returncode == 0:
-            s = True
-
-            # Parse the output here, and populate the list
-            line_filter = re.compile("^([^:]+)\s*:\s*(.*)$")
-            for message in out.split("\n\n"):
-                l = {}
-                for line in message.split("\n"):
-                    m = line_filter.match(line)
-                    if m:
-                        l[m.group(1).replace(' ','')] = m.group(2)
-                if len(l) > 6:
-                    log.append(l)
-
         else:
-            self._dolog(logging.ERROR, "Failed to read git log" % \
-                    (self.cache))
-            self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
-                (s, " ".join(cmd), out, error, pr.returncode))
-                        
-        # Sort by commit date
-        log = sorted(log, key=lambda k: k['committer_date']) 
-        return (log,s,out,error,pr.returncode)
+            (out, error) = pr.communicate()
+            ret = pr.returncode
+
+            if ret == 0:
+                s = True
+
+                # Parse the output here, and populate the list
+                line_filter = re.compile("^([^:]+)\s*:\s*(.*)$")
+                for message in out.split("\n\n"):
+                    l = {}
+                    for line in message.split("\n"):
+                        m = line_filter.match(line)
+                        if m:
+                            l[m.group(1).replace(' ','')] = m.group(2)
+                    if len(l) > 6:
+                        log.append(l)
+
+            else:
+                self._dolog(logging.ERROR, "Failed to read git log" % \
+                        (self.cache))
+                self._dolog(logging.DEBUG, "status=%s, cmd=%s, stdout=%s, stderr=%s, retcode=%s" % \
+                    (s, " ".join(cmd), out, error, ret))
+                            
+            # Sort by commit date
+            log = sorted(log, key=lambda k: k['committer_date']) 
+
+        return (log,s,out,error,ret)
 
     def _dolog(self,level,text):
         if not self.log_file:
