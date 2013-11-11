@@ -671,7 +671,7 @@ def verify_date(date):
     r = re.compile('^\d{4}-\d{2}-\d{2}$')
     if r.match(date):
         return True
-    else
+    else:
         return False
 
 def get_boot_requests(mac = False, first = 0, limit = False, status = []):
