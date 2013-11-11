@@ -647,7 +647,7 @@ def process_log_data(data,checksum,host):
 
 def get_discovered_hosts(limit = False, uniqe = True):
     res = []
-    history = get_boot_requests()
+    (history, dates) = get_boot_requests()
     for i in history:
         if i['status'] == 404:
             if uniqe:
@@ -674,8 +674,20 @@ def verify_date(date):
     else:
         return False
 
-def get_boot_requests(mac = False, first = 0, limit = False, status = []):
+def get_boot_requests(mac = False, first = 0, limit = False, status = [], status_filter = False, date = False):
     res = []
+    dates = {}
+
+    if status_filter == 'only':
+        pass
+    elif status_filter == 'exclude':
+        pass
+    else:
+        status_filter = 'all'
+
+    print "Status: %s" % status
+    print "Filter: %s" % status_filter
+
     now = datetime.datetime.now()
     col = dbopen('log')
     prefix = "get_boot_requests"
@@ -689,6 +701,7 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
         dolog("Unable to get boot requests %s" % (q), prefix)
     else:
         for i in cursor.sort('epoch',pymongo.DESCENDING):
+            add = False
             dt = epoch_to_dt(i['epoch'])
             i['age'] = humanize_date_difference(dt,now)
             i['pretty_mac'] = pretty_mac(i['mac'])
@@ -699,13 +712,34 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = []):
                 i['client_ptr'] = fqdn
                 i['domain'] = extract_domain_from_fqdn(fqdn)
 
-            res.append(i)
+            if status_filter == 'only':
+                if i['status'] in status:
+                    add = True
+            elif status_filter == 'exclude':
+                if i['status'] not in status:
+                    add = True
+            else:
+                add = True
 
+            if add == True:
+                d = dt.strftime("%Y-%m-%d")
+                if not d in dates:
+                    dates[d] = 0
+
+                # One more request this day
+                dates[d] += 1
+
+                if not date:
+                   res.append(i)
+
+                else:
+                    if date == d:
+                        res.append(i)
 
     #res = sorted(res, key=lambda x: x['epoch'], reverse = True)
     if limit:
         res=res[first:first+limit]
-    return res
+    return res, dates
 
 #def get_last_boot_requests(first = 0, limit = False, mac = False, status = []):
 #    res = []
@@ -813,7 +847,7 @@ def get_templates():
 
 @app.route("/")
 def index():
-    k = get_boot_requests()
+    (k, dates) = get_boot_requests()
 
     known = []
 
@@ -958,7 +992,7 @@ def templates_new():
 @app.route("/hosts")
 def hosts():
     (cfg, output) = get_bootstrap_cfg()
-    history = get_boot_requests()
+    (history, dates) = get_boot_requests()
     data = {}
     for i in history:
         mac = i['mac']
@@ -1088,7 +1122,7 @@ def maintenance():
 @app.route("/domains/")
 @app.route("/domains")
 def domains():
-    history = get_boot_requests()
+    (history, dates) = get_boot_requests()
     data = []
     domains = []
 
@@ -1119,7 +1153,7 @@ def domain(domain):
     if not domain:
         return flask.make_response("The given domain is not valid", 400)
 
-    history = get_boot_requests()
+    (history, dates) = get_boot_requests()
     data = {}
     for i in history:
         if not i['mac'] in data:
@@ -1145,57 +1179,79 @@ def domain(domain):
         active = "domains", entries = hosts, headings = headings, \
         domain = domain)
 
+def parse_status(s):
+    status = []
+    if s:
+        for i in s.split(","):
+            try:
+                status.append(int(i))
+            except:
+                pass
+    return status
+
 @app.route("/history/")
 @app.route("/history")
 def history():
 
-#@app.route("/history/<date>/")
-#@app.route("/history/<date>")
-#    if not verify_date(date):
-#        return flask.redirect('/history')
+    s = flask.request.args.get('status', False)
+    status = parse_status(s)
+    status_filter = flask.request.args.get('status_filter', False)
 
-    history = get_boot_requests()
-    data = []
-    #domains = []
+    # Show today as default
+    now = datetime.datetime.now()
+    date = now.strftime("%Y-%m-%d")
+
+    # Use the date of the last boot request
+    if len(status) > 0:
+        (boot, dates) = get_boot_requests(limit = 1, status = status, status_filter='only')
+    else:
+        (boot, dates) = get_boot_requests(limit = 1)
+
+    if len(boot) == 1:
+        if 'epoch' in boot[0]:
+            dt = epoch_to_dt(boot[0]['epoch'])
+            date = dt.strftime("%Y-%m-%d")
+
+    if len(status)>0:
+        return flask.redirect('/history/%s?status=%s&status_filter=%s' % (date,s,status_filter))
+    else:
+        return flask.redirect('/history/%s' % date)
+
+@app.route("/history/<date>/", methods = ['POST', 'GET'])
+@app.route("/history/<date>", methods = ['POST', 'GET'])
+def history_date(date):
+
+    if not verify_date(date):
+        return flask.redirect('/history')
+
+    if flask.request.method == 'POST':
+        try:
+            date = flask.request.form['date']
+            status = flask.request.form['status']
+            status_filter = flask.request.form['status_filter']
+            verify_date(date)
+        except:
+            pass
+        else:
+            try:
+                int(status)
+                status_filter
+            except:
+                return flask.redirect('/history/%s' % (date))
+            else:
+                return flask.redirect('/history/%s?status=%s&status_filter=%s' % (date,status,status_filter))
 
     # Status filter
     s = flask.request.args.get('status', False)
-    status = []
-    if s:
-        for i in s.split(","):
-            status.append(int(i))
+    status = parse_status(s)
+    status_filter = flask.request.args.get('status_filter', False)
 
-    exclude = False # The default filter is include
     if len(status) > 0:
-        # Status filter is set
-
-        # Check if this is a include or exclude filter
-        for s in status:
-            if s<0:
-                # If any given statuses is less than 0, it's an exclude filter
-                exclude = True
-
-        for i in history:
-            if 'status' in i:
-                if exclude:
-                    # Exclude filter. Do not show entries with status prefixed 
-                    # with -
-                    if s*-1 == i['status']:
-                        pass
-                    else:
-                        data.append(i)
-                else:
-                    # Include filter. Show only entries with status matching
-                    # the list of possible statuses.
-                    if s == i['status']:
-                        data.append(i)
-
-                # Show only entries with matching status
-                if i['status'] in status:
-                    data.append(i)
+        (entries, dates) = get_boot_requests(date = date, status = status, status_filter = status_filter)
     else:
-        # Status filter is not set. Show everything.
-        data = history
+        (entries, dates) = get_boot_requests(date = date)
+
+    data = []
 
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
@@ -1207,10 +1263,10 @@ def history():
         {'id': 'status',        'pretty': 'Status'},
     ]
 
-    data = sorted(data, key=lambda x: x['epoch'], reverse = True)
+    entries = sorted(entries, key=lambda x: x['epoch'], reverse = True)
     return flask.render_template("history.html", title = "Boot history", \
-        active = "history", entries = data, headings = headings, \
-        status = status, exclude = exclude)
+        active = "history", entries = entries, headings = headings, \
+        status = status, dates = dates, date = date, s = s, status_filter = status_filter)
 
 #@app.route("/boot-history/")
 #@app.route("/boot-history")
@@ -1283,7 +1339,7 @@ def mac_security(mac):
                 target=".htaccess"
                 f = app.config['DEFAULT_HOST_HTACCESS_CONFIGURATION']
                 content = read_file(f)
-                data = get_boot_requests(limit = 1, mac = mac)
+                (data, dates) = get_boot_requests(limit = 1, mac = mac)
                 if len(data) == 1:
                     data = data[0]
 
@@ -1295,7 +1351,7 @@ def mac_security(mac):
                     for o in output:
                         messages.append(o)
 
-    boot = get_boot_requests(limit = 1, mac = mac)
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
 
     return flask.render_template("mac_security.html", \
@@ -1327,7 +1383,7 @@ def mac_security_edit(mac):
                 status = False
 
             target=".htaccess"
-            data = get_boot_requests(limit = 1, mac = mac)
+            (data, dates) = get_boot_requests(limit = 1, mac = mac)
             if len(data) == 1:
                 data = data[0]
 
@@ -1341,7 +1397,7 @@ def mac_security_edit(mac):
                     for o in output:
                         messages.append(o)
 
-    boot = get_boot_requests(limit = 1, mac = mac)
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
     for o in output:
         messages.append(o)
@@ -1379,7 +1435,7 @@ def mac_configuration(mac):
 
                     target="ipxe"
                     content = t['content']
-                    data = get_boot_requests(limit = 1, mac = mac)
+                    (data, dates) = get_boot_requests(limit = 1, mac = mac)
                     if len(data) == 1:
                         data = data[0]
 
@@ -1394,7 +1450,7 @@ def mac_configuration(mac):
             if not found:
                 messages.append((2, "The template was not found. Please re-try."))
 
-    boot = get_boot_requests(limit = 1, mac = mac)
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
     for o in output:
         messages.append(o)
@@ -1430,7 +1486,7 @@ def mac_configuration_edit(mac):
                 status = False
 
             target="ipxe"
-            data = get_boot_requests(limit = 1, mac = mac)
+            (data, dates) = get_boot_requests(limit = 1, mac = mac)
             if len(data) == 1:
                 data = data[0]
 
@@ -1444,7 +1500,7 @@ def mac_configuration_edit(mac):
                     for o in output:
                         messages.append(o)
 
-    boot = get_boot_requests(limit = 1, mac = mac)
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
     (cfg,output) = get_bootstrap_cfg(mac)
     for o in output:
         messages.append(o)
@@ -1461,8 +1517,8 @@ def mac_history(mac):
     if not mac:
         return flask.make_response("The given mac address is not valid", 400)
 
-    boot = get_boot_requests(limit = 1, mac = mac)
-    history = get_boot_requests(mac)
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
+    (history, dates) = get_boot_requests(mac)
     headings = [
         {'id': 'age',           'pretty': 'Last active'},
         {'id': 'timestamp',     'pretty': 'Timestamp'},

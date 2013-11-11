@@ -1,0 +1,15 @@
+<form class="form-horizontal" role="form" method="POST" action="">
+  <div class="form-group">
+    <div class="col-lg-2">
+      <select name="date" class="form-control">
+        {% for d in dates | sort(reverse = True) %}
+          <option {% if date == d %}selected="selected"{% endif %} value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <input type="hidden" name="status" value="{{ s }}"/>
+    <input type="hidden" name="status_filter" value="{{ status_filter }}"/>
+    <input type="submit" class="btn btn-primary" value="Go"/>
+  </div>
+</form>
+
