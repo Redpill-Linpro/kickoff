@@ -45,7 +45,7 @@ file {
         mode    => "0444",
         owner   => "root",
         group   => "root",
-        content => "/var/log/kickoff/*log {\ndaily\nrotate 90\ncopytruncate\ndelaycompress\n}";
+        content => "/var/log/kickoff/*log {\n daily\n rotate 90\n copytruncate\n delaycompress\n}";
 }
 
 Service {
