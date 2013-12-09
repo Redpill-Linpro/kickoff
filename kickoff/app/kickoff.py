@@ -688,9 +688,11 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = [], status
     print "Status: %s" % status
     print "Filter: %s" % status_filter
 
+
     now = datetime.datetime.now()
     col = dbopen('log')
     prefix = "get_boot_requests"
+    fqdn_cache = {}
     try:
         q = {}
         if mac:
@@ -707,7 +709,12 @@ def get_boot_requests(mac = False, first = 0, limit = False, status = [], status
             i['pretty_mac'] = pretty_mac(i['mac'])
             i['status'] = int(i['status'])
 
-            fqdn = get_reverse_address(i['client'])
+            if i['client'] in fqdn_cache:
+                fqdn = fqdn_cache[i['client']]
+            else:
+                fqdn = get_reverse_address(i['client'])
+                fqdn_cache[i['client']] = fqdn
+
             if fqdn:
                 i['client_ptr'] = fqdn
                 i['domain'] = extract_domain_from_fqdn(fqdn)
