@@ -4,7 +4,9 @@ $packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim',
               'language-pack-nb', 'language-pack-kde-nb-base',
               'git' ]
 package {
-    $packages: ensure => installed;
+    $packages: 
+        ensure  => 'installed',
+        require => Exec['apt-get update'];
 }
 
 File {
@@ -13,15 +15,15 @@ File {
 
 file { 
     '/var/log/kickoff_slaves':
-        ensure => directory,
+        ensure => 'directory',
         owner  => 'root',
         group  => 'root';
     '/var/log/kickoff':
-        ensure => directory,
+        ensure => 'directory',
         owner  => 'www-data',
         group  => 'www-data';
     '/srv/kickoff':
-        ensure => directory,
+        ensure => 'directory',
         owner  => 'www-data',
         group  => 'www-data';
     '/etc/motd':
@@ -33,22 +35,22 @@ file {
         notify  => Service['uwsgi'],
         source  => '/vagrant/puppet/files/uwsgi/kickoff.yaml';
     '/var/lib/kickoff':
-        ensure  => directory,
+        ensure  => 'directory',
         owner   => 'www-data',
         group   => 'www-data',
         mode    => 700;
     '/srv/www':
-        ensure  => directory,
+        ensure  => 'directory',
         notify  => Service['nginx'];
     '/srv/www/kickoff':
-        ensure  => link,
+        ensure  => 'link',
         require => File['/srv/www'],
         notify  => Service['nginx'],
         target  => '/vagrant/kickoff';
     '/etc/logrotate.d/kickoff':
-        mode    => "0444",
-        owner   => "root",
-        group   => "root",
+        mode    => '0444',
+        owner   => 'root',
+        group   => 'root',
         content => "/var/log/kickoff/*log {\n daily\n rotate 90\n copytruncate\n delaycompress\n}";
 }
 
@@ -57,18 +59,20 @@ Service {
     require    => Package[$packages],
     hasrestart => true,
     enable     => true,
-    notify     => Notify[$fqdn],
 }
 
 service {
     'nginx': ;
     'mongodb': ;
     'uwsgi': 
-        require => [File['/etc/uwsgi/apps-enabled/kickoff.yaml'],
+        require => [Package[$packages],
+                    File['/etc/uwsgi/apps-enabled/kickoff.yaml'],
                     File['/srv/www/kickoff']];
 }
 
-notify {
-    $fqdn:
-        message => "The kickoff web application is available at http://${ipaddress_eth1}/";
+exec {
+    "apt-get update":
+        command     => 'apt-get update',
+        path        => '/sbin:/bin:/usr/bin:/usr/sbin',
+        user        => 'root';
 }
