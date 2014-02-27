@@ -1603,7 +1603,7 @@ def mac_environment(mac):
                 messages.append((2, "The environment was not found. Please re-try."))
 
     (boot, dates) = get_boot_requests(limit = 1, mac = mac)
-    (cfg,output) = get_bootstrap_environment(mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
     for o in output:
         messages.append(o)
 
