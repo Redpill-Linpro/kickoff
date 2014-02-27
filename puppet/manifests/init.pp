@@ -52,6 +52,12 @@ file {
         owner   => 'root',
         group   => 'root',
         content => "/var/log/kickoff/*log {\n daily\n rotate 90\n copytruncate\n delaycompress\n}";
+     '/var/tmp/bootstrap.git':
+        ensure  => 'directory',
+        mode    => '0755',
+        owner   => 'www-data',
+        group   => 'www-data',
+        notify  => Exec['git init'];
 }
 
 Service {
@@ -75,4 +81,11 @@ exec {
         command     => 'apt-get update',
         path        => '/sbin:/bin:/usr/bin:/usr/sbin',
         user        => 'root';
+    "git init":
+        command     => 'git --bare init',
+        require     => File['/var/tmp/bootstrap.git'],
+        cwd         => '/var/tmp/bootstrap.git',
+        path        => '/sbin:/bin:/usr/bin:/usr/sbin',
+        user        => 'www-data',
+        refreshonly => true;
 }

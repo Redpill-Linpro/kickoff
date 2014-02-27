@@ -515,6 +515,14 @@ def create_default_configuration(i):
         message = "Added htaccess configuration automatically by host discovery from %s" % i['client']
         (status, output) = inject_template(content, target, mac, message, i)
 
+    # Create default environment configuration
+    if status:
+        f = app.config['DEFAULT_HOST_ENVIRONMENT_CONFIGURATION']
+        content = read_file(f)
+        target="environment"
+        message = "Added environment automatically by host discovery from %s" % i['client']
+        (status, output) = inject_template(content, target, mac, message, i)
+
     return status
 
 def inject_template(content, target, mac, log_message, data = {}):
@@ -948,22 +956,22 @@ def environments_new():
     if _id:
         subactive = "modify"
         environments = get_environments()
-        for t in environments:
-            if str(t['_id']) == str(_id):
+        for e in environments:
+            if str(e['_id']) == str(_id):
                 title = "Modify environment"
 
-                if 'name' in t:
-                    name = t['name']
+                if 'name' in e:
+                    name = e['name']
 
-                if 'enabled' in t:
-                    enabled = t['enabled']
+                if 'enabled' in e:
+                    enabled = e['enabled']
 
-                if 'content' in t:
-                    content = t['content']
+                if 'content' in e:
+                    content = e['content']
 
                 try:
                     i['_id'] = bson.objectid.ObjectId(_id)
-                    i['registered'] = t['registered']
+                    i['registered'] = e['registered']
                 except:
                     messages.append((3,"Environment id is not valid!"))
                     status = False
@@ -983,11 +991,11 @@ def environments_new():
 
         else:
             if len(name) < 3:
-                messages.append((2, "The name of the template is too short."))
+                messages.append((2, "The name of the environment is too short."))
                 status = False
               
             if len(content) < 3:
-                messages.append((2, "The content of the template is too short."))
+                messages.append((2, "The content of the environment is too short."))
                 status = False
 
             i['name'] = name
@@ -1013,7 +1021,7 @@ def environments_new():
                     dolog("Unable to insert environment into db", prefix)
                     messages.append((3, "Failed to write the changes to the database."))
                 else:
-                    dolog("Template '%s' written to the database successfully" % name)
+                    dolog("Environment '%s' written to the database successfully" % name)
                     messages.append((0, "The changes have been written to the database."))
     
     return flask.render_template("environments_modify.html", \
@@ -1551,6 +1559,109 @@ def mac_security_edit(mac):
         pretty_mac = pretty_mac(mac), \
         messages = messages, \
         active = "hosts", subactive = "security", cfg = cfg, boot = boot)
+
+@app.route("/mac/<mac>/environment", methods = ['POST', 'GET'])
+def mac_environment(mac):
+    mac = clean_mac(mac)
+    environments = get_environments()
+    messages = []
+    client = "TODO"
+    repository = app.config['REPOSITORY']
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    if flask.request.method == 'POST':
+
+        # Will inject 
+        status = True
+        try:
+            _id = flask.request.form['id']
+        except:
+            messages.append((3, "All required input fields are not set, please try again."))
+        else:
+            found = False
+            for e in environments:
+                if e['_id'] == _id:
+                    found = True
+
+                    target="environment"
+                    content = e['content']
+                    (data, dates) = get_boot_requests(limit = 1, mac = mac)
+                    if len(data) == 1:
+                        data = data[0]
+
+                    log_message = "The environment '%s' was injected to host %s" % (t['name'], pretty_mac(mac))
+                    (status, output) = inject_template(content, target, mac, log_message, data)
+                    if status:
+                        messages.append((0, "The environment '%s' was successfully injected to host %s" % (t['name'], pretty_mac(mac))))
+                    else:
+                        for o in output:
+                            messages.append(o)
+
+            if not found:
+                messages.append((2, "The environment was not found. Please re-try."))
+
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
+    for o in output:
+        messages.append(o)
+
+    return flask.render_template("mac_environment.html", \
+        title = "%s environment" % pretty_mac(mac), mac = mac, \
+        pretty_mac = pretty_mac(mac), \
+        environments = environments, \
+        repository = repository, \
+        messages = messages, \
+        active = "hosts", subactive = "environment", cfg = cfg, boot = boot)
+
+@app.route("/mac/<mac>/environment/edit", methods = ['POST', 'GET'])
+def mac_environment_edit(mac):
+    mac = clean_mac(mac)
+    messages = []
+    client = "TODO"
+
+    if not mac:
+        return flask.make_response("The given mac address is not valid", 400)
+
+    if flask.request.method == 'POST':
+
+        # Will inject 
+        status = True
+        try:
+            content = flask.request.form['content']
+        except:
+            messages.append((3, "All required input fields are not set, please try again."))
+        else:
+            if len(content) < 3:
+                messages.append((2, "The content of the environment is too short."))
+                status = False
+
+            target="environment"
+            (data, dates) = get_boot_requests(limit = 1, mac = mac)
+            if len(data) == 1:
+                data = data[0]
+
+            if status:
+                log_message = "The environment for host '%s' was " \
+                              "manually edited" % (pretty_mac(mac))
+                (status, output) = inject_template(content, target, mac, log_message, data)
+                if status:
+                    messages.append((0, "The environment for host %s was updated" % (pretty_mac(mac))))
+                else:
+                    for o in output:
+                        messages.append(o)
+
+    (boot, dates) = get_boot_requests(limit = 1, mac = mac)
+    (cfg,output) = get_bootstrap_cfg(mac)
+    for o in output:
+        messages.append(o)
+
+    return flask.render_template("mac_environment_edit.html", \
+        title = "%s environment modification" % pretty_mac(mac), mac = mac, \
+        pretty_mac = pretty_mac(mac), \
+        messages = messages, \
+        active = "hosts", subactive = "environment", cfg = cfg, boot = boot)
     
 @app.route("/mac/<mac>/configuration", methods = ['POST', 'GET'])
 def mac_configuration(mac):

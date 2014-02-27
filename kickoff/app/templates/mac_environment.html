@@ -1,0 +1,66 @@
+{% include "header.html" %}
+
+{% include "mac_menu.html" %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h2>Host environment</h2>
+  </div>
+</div>
+
+{% include "messages.html" %}
+
+<div class="row">
+  <div class="col-md-12">
+    {% if cfg[mac] %}
+      {% if cfg[mac].ipxe %}
+        <pre>{{ cfg[mac].ipxe }}</pre>
+      {% else %}
+        <p class="lead">None found</p>
+      {% endif %}
+    {% else %}
+      <p class="lead">No environment was found for this mac address.</p>
+    {% endif %}
+  </div>
+</div>
+
+<p class="lead">Modify the current environment using one of the methods below.</p>
+<div class="row">
+  <div class="col-lg-4">
+    <h4>Inject environment</h4>
+    <p>You can overwrite the current settings by injecting an environment. The new settings will be identical* to the one injected.</p>
+    <p><small>* Variable substitution may be used by some environments.</small></p>
+    <form class="form-horizontal" role="form" method="POST" action="">
+      <div class="form-group">
+        <div class="col-lg-8">
+          <select name="id" class="form-control">
+            {% for e in environments %}
+              {% if e.enabled %}
+                <option value="{{ e._id }}">{{ e.name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <input type="submit" class="btn btn-primary" value="Inject"/>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-4">
+    <h4>HTML editor</h4>
+    <p>The current environment can be modified using a simple html editor.</p>
+    <form class="form-horizontal" role="form">
+      <div class="form-group">
+        <div class="col-lg-4">
+          <a href="/mac/{{ mac }}/environment/edit" class="btn btn-primary">Edit &raquo;</a>
+        </div>
+      </div>
+    </form>
+ </div>
+  <div class="col-lg-4">
+    <h4>Git</h4>
+    <p>This web application is using the {{ repository }} repository to store configuration. The environment can therefore be modified using git directly for complete flexibility.</p>
+  </div>
+</div>
+
+{% include "footer.html" %}
+

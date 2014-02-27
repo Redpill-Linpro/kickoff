@@ -1,0 +1,34 @@
+{% include "header.html" %}
+
+{% include "mac_menu.html" %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h2>Host environment</h2>
+  </div>
+</div>
+
+{% include "messages.html" %}
+
+<form class="form-horizontal" role="form" method="POST" action="">
+<div class="row">
+  <div class="col-md-12">
+    <textarea class="form-control" name="content" id="content" cols="100" rows="10" {% if not cfg[mac].ipxe %}placeholder="#!ipxe"{% endif %}>{% if cfg[mac].ipxe %}{{ cfg[mac].ipxe }}{% endif %}</textarea>
+    <div class="pull-right">Reference documentation: <a href="http://ipxe.org/scripting">Scripting guide</a> and <a href="http://ipxe.org/cmd">command reference</a>.</div>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <button type="submit" class="btn btn-primary">
+      Save
+    </button>
+    
+    <a href="/mac/{{ mac }}/environment" class="btn btn-default">
+      Back
+    </a>
+  </div>
+</div>
+</form>
+
+{% include "footer.html" %}
+
