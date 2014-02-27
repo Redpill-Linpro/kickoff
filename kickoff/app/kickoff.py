@@ -1915,61 +1915,6 @@ def get_bootstrap_cfg(mac = False):
             
     return (data,messages)
 
-def get_bootstrap_cfg(mac = False):
-    repository = app.config['REPOSITORY']
-    cache = app.config['CACHE']
-    messages = []
-
-    if mac:
-        if not verify_mac(mac):
-            mac = False
-
-    repo = gitsh.gitsh(repository, cache, log_file = app.config['LOG_FILE'])
-    if os.path.isdir(cache):
-        (s,out,error,ret) = repo.pull()
-        if not s:
-            if error:
-                messages.append((3,error))
-            elif out:
-                messages.append((3,out))
-            else:
-                messages.append((3,"Unable to pull the remote repository"))
-    else:
-        (s,out,error,ret) = repo.clone()
-        if not s:
-            if error:
-                messages.append((3,error))
-            elif out:
-                messages.append((3,out))
-            else:
-                messages.append((3,"Unable to clone the repository"))
-
-    data = {}
-    if os.path.isdir(cache):
-        for d in os.listdir(cache):
-            path = cache + "/" + d
-            if os.path.isdir(path):
-                m = clean_mac(d)
-                if verify_mac(m):
-                    if mac:
-                        if mac != m:
-                            continue
-    
-                    if not m in data:
-                        data[m] = {}
-                        data[m]['pretty_mac'] = pretty_mac(m)
-        
-                    for f in os.listdir(cache + "/" + d):
-                        path = cache + "/" + d + "/" + f
-                        if os.path.isfile(path):
-                            if f == 'ipxe':
-                                data[m]['ipxe'] = read_file(path)
-                
-                            elif f == '.htaccess':
-                                data[m]['htaccess'] = read_file(path)
-            
-    return (data,messages)
-
 #@app.route("/api/configuration/", methods = ['GET', 'POST'])
 #@app.route("/api/configuration", methods = ['GET', 'POST'])
 #def api_configuration():
