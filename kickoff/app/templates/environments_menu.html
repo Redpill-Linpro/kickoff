@@ -1,0 +1,11 @@
+<h1>Environments</h1>
+<p class="lead">It is suitable to use environments whenever they are going to be used on multiple hosts.</p>
+
+<ul class="nav nav-tabs">
+  <li {% if subactive=="existing" %}class="active"{% endif %}><a href="/environments/existing">Existing environments</a></li>
+  <li {% if subactive=="new" %}class="active"{% endif %}><a href="/environments/new">Create new environment</a></li>
+  {% if _id %}
+    <li {% if subactive=="modify" %}class="active"{% endif %}><a href="/environments/modify?id={{ _id }}">Modify environment</a></li>
+  {% endif %}
+</ul>
+

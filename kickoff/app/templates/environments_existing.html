@@ -1,0 +1,61 @@
+{% include "header.html" %}
+
+{% include "environments_menu.html" %}
+
+<h2>Existing environments</h2>
+<p class="lead">Showing all the environments. Enabled environments can be injected when configuring MAC address netboot configurations.</p>
+
+<div class="row">
+  <div class="col-md-12">
+    <table class="table">
+      <thead>
+        <th>Environment name</th>
+        <th>Enabled</th>
+        <th>Registered</th>
+        <th>Updated</th>
+        <th></th>
+      </thead>
+      <tbody>
+        {% for e in environments %}
+          <tr {% if e.enabled %} class="active"{% endif %}>
+            <td>
+              {{ e.name }}
+            </td>
+            <td>
+              {% if e.enabled %}
+                <span rel="tooltip" title="The environment is enabled" class="label label-success">Yes</span>
+              {% else %}
+                <span rel="tooltip" title="The environment is disabled" class="label label-info">No</span>
+              {% endif %}
+            </td>
+            <td>
+              {{ e.registered_age }}
+            </td>
+            <td>
+              {% if e.updated_age %}
+                {{ e.updated_age }}
+              {% else %}
+                Never
+              {% endif %}
+            </td>
+            <td>
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#{{ e._id }}"><span class="glyphicon glyphicon-eye-open"></span></a>
+              <a href="/environments/modify?id={{ e._id }}"><span class="glyphicon glyphicon-wrench"></span></a>
+            </td>
+          </tr>
+          <tr id="{{ e._id }}" class="panel-collapse collapse">
+            <td colspan="5">
+              <div>
+                <div class="panel-body">
+                  <pre>{{ e.content }}</pre>
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "footer.html" %}

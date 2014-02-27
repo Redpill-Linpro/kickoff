@@ -824,6 +824,33 @@ def get_reverse_address(ip):
         reverse = False
     return reverse
 
+def get_environments():
+    environments = []
+    now = datetime.datetime.now()
+    col = dbopen('environments')
+    prefix = "get_environments"
+    try:
+        q = {}
+        cursor = col.find(q)
+    except:
+        dolog("Unable to get environments from the database: %s" % (q), prefix)
+    else:
+        for i in cursor:
+            i['_id'] = str(i['_id'])
+
+            if 'registered' in i:
+                dt = epoch_to_dt(i['registered'])
+                i['registered_age'] = humanize_date_difference(dt,now)
+
+            if 'updated' in i:
+                dt = epoch_to_dt(i['updated'])
+                i['updated_age'] = humanize_date_difference(dt,now)
+
+            environments.append(i)
+
+    environments = sorted(environments, key=lambda x: (-x['enabled'], x['name']))
+    return environments
+
 def get_templates():
     templates = []
     now = datetime.datetime.now()
@@ -884,6 +911,116 @@ def index():
     return flask.render_template("index.html", title = "Overview", \
         active = "overview", unknown = unknown, entries = known, \
         headings = headings)
+
+@app.route("/environments/")
+@app.route("/environments")
+def environments():
+    return flask.redirect('/environments/existing')
+
+@app.route("/environments/existing/")
+@app.route("/environments/existing")
+def environments_existing():
+    environments = get_environments()
+
+    return flask.render_template("environments_existing.html", \
+        title = "Available environments", \
+        environments = environments, \
+        active = "environments", subactive = "existing" )
+
+@app.route("/environments/modify/", methods = ['GET', 'POST'])
+@app.route("/environments/modify", methods = ['GET', 'POST'])
+@app.route("/environments/new/", methods = ['GET', 'POST'])
+@app.route("/environments/new", methods = ['GET', 'POST'])
+def environments_new():
+
+    prefix = "environments_modify"
+    subactive = "new"
+    messages = []
+    status = True
+    name = False
+    content = False
+    enabled = False
+
+    title = "Create new environment"
+
+    _id = flask.request.args.get('id', False)
+    i = {}
+    if _id:
+        subactive = "modify"
+        environments = get_environments()
+        for t in environments:
+            if str(t['_id']) == str(_id):
+                title = "Modify environment"
+
+                if 'name' in t:
+                    name = t['name']
+
+                if 'enabled' in t:
+                    enabled = t['enabled']
+
+                if 'content' in t:
+                    content = t['content']
+
+                try:
+                    i['_id'] = bson.objectid.ObjectId(_id)
+                    i['registered'] = t['registered']
+                except:
+                    messages.append((3,"Environment id is not valid!"))
+                    status = False
+
+    if flask.request.method == 'POST':
+        try:
+            enabled = flask.request.form['enabled']
+        except:
+            enabled = False
+
+        try:
+            name = flask.request.form['name']
+            content = flask.request.form['content']
+
+        except:
+            messages.append((2, "All required input fields are not set, please try again."))
+
+        else:
+            if len(name) < 3:
+                messages.append((2, "The name of the template is too short."))
+                status = False
+              
+            if len(content) < 3:
+                messages.append((2, "The content of the template is too short."))
+                status = False
+
+            i['name'] = name
+            i['content'] = content
+
+            if enabled:
+                i['enabled'] = True
+            else:
+                i['enabled'] = False
+
+            if status:
+                col = dbopen('environments')
+                dt = datetime.datetime.now()
+                epoch = int(time.mktime(dt.timetuple()))
+                try:
+                    if _id:
+                        i['updated'] = epoch
+                        col.update({'_id':bson.objectid.ObjectId(_id)}, i,True)
+                    else:
+                        i['registered'] = epoch
+                        col.insert(i)
+                except:
+                    dolog("Unable to insert environment into db", prefix)
+                    messages.append((3, "Failed to write the changes to the database."))
+                else:
+                    dolog("Template '%s' written to the database successfully" % name)
+                    messages.append((0, "The changes have been written to the database."))
+    
+    return flask.render_template("environments_modify.html", \
+        title = title, \
+        active = "environments", subactive = subactive, \
+        messages = messages, \
+        name = name, enabled = enabled, content = content, _id = _id)
 
 @app.route("/templates/")
 @app.route("/templates")

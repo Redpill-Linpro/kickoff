@@ -1,0 +1,62 @@
+{% include "header.html" %}
+
+{% include "environments_menu.html" %}
+
+{% if _id %}
+  <h2>Modify environment</h2>
+{% else %}
+  <h2>Create new environment</h2>
+  <p class="lead">You are encouraged to choose a name of the environment matching the naming convention in use. Please review the names used at the <a href="/environments">existing environments</a> first.</p>
+{% endif %}
+
+{% include "messages.html" %}
+
+<form class="form-horizontal" role="form" method="POST" action="">
+  <div class="form-group">
+    <label for="name" class="col-lg-2 control-label">Name</label>
+    <div class="col-lg-4">
+      <input name="name" type="text" class="form-control" id="name" {% if name %}value="{{ name }}"{% else %}placeholder="Name"{% endif %}>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="enabled" class="col-lg-2 control-label" rel="tooltip" title="A environment must be enabled to show up in the list of available environments when configuring MAC addresses. Use this feature to hide environments that should not be used.">Enabled</label>
+    <div class="col-lg-4">
+      <div class="checkbox">
+        {% if _id %}
+          {% if enabled %}
+            <input name="enabled" type="checkbox" id="enabled" checked="checked"/>
+          {% else %}
+            <input name="enabled" type="checkbox" id="enabled"/>
+          {% endif %}
+        {% else %}
+          <input name="enabled" type="checkbox" id="enabled" checked="checked"/>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label for="content" class="col-lg-2 control-label">Content</label>
+    <div class="col-lg-8">
+      <textarea name="content" id="content" cols="100" rows="10" {% if not content %}placeholder="#!ipxe"{% endif %}>{% if content %}{{ content }}{% endif %}</textarea>
+      <div>Reference documentation: <a href="http://ipxe.org/scripting">Scripting guide</a> and <a href="http://ipxe.org/cmd">command reference</a>.</div>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-lg-offset-2 col-lg-10">
+      <button type="submit" class="btn btn-primary">
+      {% if _id %}
+        Save
+      {% else %}
+        Create
+      {% endif %}
+      </button>
+
+      {% if _id %}
+        <a href="/environments" class="btn btn-default">Back</a>
+      {% endif %}
+    </div>
+  </div>
+</form>
+
+{% include "footer.html" %}
