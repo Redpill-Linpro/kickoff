@@ -2,7 +2,7 @@ $packages = [ 'nginx', 'uwsgi', 'uwsgi-plugin-python', 'vim',
               'uwsgi-plugin-http', 'curl', 'python-dulwich',
               'mongodb', 'python-pymongo', 'language-pack-nb-base',
               'language-pack-nb', 'language-pack-kde-nb-base',
-              'git' ]
+              'git', 'rlwrap' ]
 package {
     $packages: 
         ensure  => 'installed',
