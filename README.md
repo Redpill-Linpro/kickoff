@@ -6,7 +6,7 @@ Kickoff is a web service which sole purpose is to assist when installing operati
 Development environment
 -----------------------
 
-    git clone https://github.com/espebra/kickoff
+    git clone
     cd kickoff
     vagrant up
 
