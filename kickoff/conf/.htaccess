@@ -1,11 +1,5 @@
 # The host itself
 allow from ##client##
 
-# The privileged network
-allow from 87.238.42.0/25
-allow from 2a02:c0:1002:102:ffff::1/64
-allow from 87.238.42.129/25
-allow from 2a02:c0:100:0:ffff::1/64
-
 # Deny everyone else by default
 deny from all
